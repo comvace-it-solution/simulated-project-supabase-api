@@ -8,12 +8,22 @@ declare module "jsr:@supabase/supabase-js@2" {
     error: SupabaseError | null;
   }
 
-  export interface QueryBuilder<T = unknown> {
+  export interface SingleQueryResult<T> {
+    data: T | null;
+    error: SupabaseError | null;
+  }
+
+  export interface QueryBuilder<T = unknown> extends PromiseLike<QueryResult<T>> {
     select(columns: string): QueryBuilder<T>;
+    insert(values: Partial<T> | Array<Partial<T>>): QueryBuilder<T>;
+    update(values: Partial<T>): QueryBuilder<T>;
+    delete(): QueryBuilder<T>;
+    eq(column: string, value: unknown): QueryBuilder<T>;
     order(
       column: string,
       options?: { ascending?: boolean },
-    ): Promise<QueryResult<T>>;
+    ): QueryBuilder<T>;
+    single(): Promise<SingleQueryResult<T>>;
   }
 
   export interface SupabaseClient {
