@@ -4,13 +4,22 @@ const fs = require("node:fs");
 const vm = require("node:vm");
 
 function loadHandler(options = {}) {
-  let source = fs.readFileSync(__dirname + "/index.ts", "utf8");
-  source = source
-    .replace(/^\/\/\/.*\n/gm, "")
-    .replace(/^import .*\n/gm, "")
-    .replace(/!;/g, ";")
-    .replace("function corsHeaders(origin: string | null) {", "function corsHeaders(origin) {")
-    .replace("async (req: Request) => {", "async (req) => {");
+  const files = ["shared.ts", "get.ts", "post.ts", "put.ts", "delete.ts", "index.ts"];
+  const source = files
+    .map((file) => fs.readFileSync(__dirname + "/" + file, "utf8"))
+    .map((content) =>
+      content
+        .replace(/^\/\/\/.*\n/gm, "")
+        .replace(/^import .*\n/gm, "")
+        .replace(/^export /gm, "")
+        .replace(/!;/g, ";")
+        .replace(/: string \| null/g, "")
+        .replace(/: HeadersInit/g, "")
+        .replace(/: Request/g, "")
+        .replace(/: Record<string, unknown>/g, "")
+        .replace(/: unknown/g, "")
+    )
+    .join("\n");
 
   const state = {
     env: {
@@ -26,6 +35,8 @@ function loadHandler(options = {}) {
     const event = {
       table,
       inserted: null,
+      updated: null,
+      deleted: false,
       selected: null,
       ordered: null,
       eq: null,
@@ -35,6 +46,14 @@ function loadHandler(options = {}) {
     return {
       insert(values) {
         event.inserted = values;
+        return this;
+      },
+      update(values) {
+        event.updated = values;
+        return this;
+      },
+      delete() {
+        event.deleted = true;
         return this;
       },
       select(columns) {
@@ -121,6 +140,8 @@ test("GET /users returns ordered list", async () => {
   assert.deepEqual(toPlainJson(state.events[0]), {
     table: "user",
     inserted: null,
+    updated: null,
+    deleted: false,
     selected: "*",
     ordered: { column: "id", options: { ascending: true } },
     eq: null,
@@ -137,6 +158,8 @@ test("GET /users?id=123 filters by id", async () => {
   assert.deepEqual(toPlainJson(state.events[0]), {
     table: "user",
     inserted: null,
+    updated: null,
+    deleted: false,
     selected: "*",
     ordered: { column: "id", options: { ascending: true } },
     eq: { column: "id", value: 123 },
@@ -248,5 +271,49 @@ test("POST /users returns 500 on database error", async () => {
   assert.equal(response.status, 500);
   assert.deepEqual(body, {
     message: "duplicate key value violates unique constraint",
+  });
+});
+
+test("PUT /users?id=5 updates user by query id", async () => {
+  const { handler, state } = loadHandler({
+    singleResult: {
+      data: { id: 5, user_name: "Updated" },
+      error: null,
+    },
+  });
+
+  const response = await handler(
+    new Request("http://localhost/users?id=5", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        id: 999,
+        user_name: "Updated",
+        email: "updated@example.com",
+      }),
+    }),
+  );
+  const body = await readJson(response);
+  const event = state.events[0];
+
+  assert.equal(response.status, 200);
+  assert.deepEqual(body, { id: 5, user_name: "Updated" });
+  assert.equal(event.updated.user_name, "Updated");
+  assert.equal(event.updated.email, "updated@example.com");
+  assert.equal(event.eq.value, 5);
+});
+
+test("DELETE /users?id=7 deletes by query id", async () => {
+  const { handler, state } = loadHandler();
+
+  const response = await handler(
+    new Request("http://localhost/users?id=7", { method: "DELETE" }),
+  );
+
+  assert.equal(response.status, 204);
+  assert.equal(state.events[0].deleted, true);
+  assert.deepEqual(toPlainJson(state.events[0].eq), {
+    column: "id",
+    value: 7,
   });
 });
