@@ -1,6 +1,6 @@
 import { createSupabaseClient, jsonResponse } from "./shared.ts";
 
-export async function handleDelete(req, cors) {
+export async function handleDelete(req: Request, cors: HeadersInit) {
   try {
     const supabase = createSupabaseClient();
     const url = new URL(req.url);

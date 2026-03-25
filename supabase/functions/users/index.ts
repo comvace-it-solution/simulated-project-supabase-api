@@ -1,4 +1,5 @@
 /// <reference path="./jsr-shims.d.ts" />
+/// <reference path="../deno-globals.d.ts" />
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { handleDelete } from "./delete.ts";
 import { handleGet } from "./get.ts";

@@ -4,27 +4,27 @@ export async function handleGet(req: Request, cors: HeadersInit) {
   try {
     const supabase = createSupabaseClient();
     const url = new URL(req.url);
-    const idParam = url.searchParams.get("id");
+    const userIdParam = url.searchParams.get("userId");
 
     let query = supabase
-      .from("user")
+      .from("auth")
       .select("*")
-      .order("id", { ascending: true });
+      .order("user_id", { ascending: true });
 
-    if (idParam !== null) {
-      if (idParam.trim() === "") {
-        return jsonResponse({ message: "Invalid id parameter" }, 400, cors);
+    if (userIdParam !== null) {
+      if (userIdParam.trim() === "") {
+        return jsonResponse({ message: "Invalid userId parameter" }, 400, cors);
       }
 
-      const id = Number(idParam);
-      const isInt = Number.isInteger(id);
-      const inRange = id >= 1 && id <= 32767;
+      const userId = Number(userIdParam);
+      const isInt = Number.isInteger(userId);
+      const inRange = userId >= 1 && userId <= 32767;
 
       if (!isInt || !inRange) {
-        return jsonResponse({ message: "Invalid id parameter" }, 400, cors);
+        return jsonResponse({ message: "Invalid userId parameter" }, 400, cors);
       }
 
-      query = query.eq("id", id);
+      query = query.eq("user_id", userId);
     }
 
     const { data, error } = await query;

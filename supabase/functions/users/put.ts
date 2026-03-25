@@ -1,6 +1,6 @@
 import { createSupabaseClient, jsonResponse } from "./shared.ts";
 
-export async function handlePut(req, cors) {
+export async function handlePut(req: Request, cors: HeadersInit) {
   try {
     const supabase = createSupabaseClient();
     const url = new URL(req.url);

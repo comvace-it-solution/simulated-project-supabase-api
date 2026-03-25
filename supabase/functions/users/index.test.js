@@ -13,6 +13,7 @@ function loadHandler(options = {}) {
         .replace(/^import .*\n/gm, "")
         .replace(/^export /gm, "")
         .replace(/!;/g, ";")
+        .replace(/: number/g, "")
         .replace(/: string \| null/g, "")
         .replace(/: HeadersInit/g, "")
         .replace(/: Request/g, "")
