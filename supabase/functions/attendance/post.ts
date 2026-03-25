@@ -3,17 +3,6 @@ import { createSupabaseClient, jsonResponse } from "./shared.ts";
 export async function handlePost(req: Request, cors: HeadersInit) {
   try {
     const supabase = createSupabaseClient();
-    const url = new URL(req.url);
-    const tableParam = url.searchParams.get("table");
-
-    if (tableParam === null || tableParam.trim() === "") {
-      return jsonResponse({ message: "table is required" }, 400, cors);
-    }
-
-    if (tableParam !== "attendance") {
-      return jsonResponse({ message: "Invalid table parameter" }, 400, cors);
-    }
-
     const body = await req.json().catch(() => null);
     if (!body) {
       return jsonResponse({ message: "Invalid JSON body" }, 400, cors);

@@ -204,23 +204,6 @@ test("POST /attendance is not allowed", async () => {
   assert.deepEqual(body, { message: "Method Not Allowed" });
 });
 
-test("POST /attendance requires table parameter", async () => {
-  const { handler, state } = loadHandler();
-
-  const response = await handler(
-    new Request("http://localhost/attendance", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ user_id: 10 }),
-    }),
-  );
-  const body = await readJson(response);
-
-  assert.equal(response.status, 400);
-  assert.deepEqual(body, { message: "table is required" });
-  assert.equal(state.events.length, 0);
-});
-
 test("POST /attendance inserts when no existing row is found", async () => {
   const { handler, state } = loadHandler({
     listResult: { data: [], error: null },
@@ -231,7 +214,7 @@ test("POST /attendance inserts when no existing row is found", async () => {
   });
 
   const response = await handler(
-    new Request("http://localhost/attendance?table=attendance", {
+    new Request("http://localhost/attendance", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -277,7 +260,7 @@ test("POST /attendance updates when a row already exists", async () => {
   });
 
   const response = await handler(
-    new Request("http://localhost/attendance?table=attendance", {
+    new Request("http://localhost/attendance", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -308,7 +291,7 @@ test("POST /attendance rejects invalid user_id", async () => {
   const { handler, state } = loadHandler();
 
   const response = await handler(
-    new Request("http://localhost/attendance?table=attendance", {
+    new Request("http://localhost/attendance", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ user_id: "abc" }),
@@ -325,7 +308,7 @@ test("POST /attendance rejects invalid state", async () => {
   const { handler, state } = loadHandler();
 
   const response = await handler(
-    new Request("http://localhost/attendance?table=attendance", {
+    new Request("http://localhost/attendance", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ user_id: 10, state: 9 }),
