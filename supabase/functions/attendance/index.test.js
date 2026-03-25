@@ -4,7 +4,7 @@ const fs = require("node:fs");
 const vm = require("node:vm");
 
 function loadHandler(options = {}) {
-  const files = ["shared.ts", "get.ts", "index.ts"];
+  const files = ["shared.ts", "get.ts", "post.ts", "index.ts"];
   const source = files
     .map((file) => fs.readFileSync(__dirname + "/" + file, "utf8"))
     .map((content) =>
@@ -29,11 +29,14 @@ function loadHandler(options = {}) {
     },
     events: [],
     listResult: options.listResult ?? { data: [], error: null },
+    singleResult: options.singleResult ?? { data: { id: 1 }, error: null },
   };
 
   function makeQueryBuilder(table) {
     const event = {
       table,
+      inserted: null,
+      updated: null,
       selected: null,
       ordered: null,
       eq: null,
@@ -41,6 +44,14 @@ function loadHandler(options = {}) {
     };
 
     return {
+      insert(values) {
+        event.inserted = values;
+        return this;
+      },
+      update(values) {
+        event.updated = values;
+        return this;
+      },
       select(columns) {
         event.selected = columns;
         return this;
@@ -52,6 +63,11 @@ function loadHandler(options = {}) {
       eq(column, value) {
         event.eq = { column, value };
         return this;
+      },
+      single() {
+        event.mode = "single";
+        state.events.push({ ...event });
+        return Promise.resolve(state.singleResult);
       },
       then(resolve, reject) {
         event.mode = "list";
@@ -123,6 +139,8 @@ test("GET /attendance returns ordered list", async () => {
   ]);
   assert.deepEqual(toPlainJson(state.events[0]), {
     table: "attendance",
+    inserted: null,
+    updated: null,
     selected: "*",
     ordered: { column: "id", options: { ascending: true } },
     eq: null,
@@ -140,6 +158,8 @@ test("GET /attendance?user_id=123 filters by user_id", async () => {
   assert.equal(response.status, 200);
   assert.deepEqual(toPlainJson(state.events[0]), {
     table: "attendance",
+    inserted: null,
+    updated: null,
     selected: "*",
     ordered: { column: "id", options: { ascending: true } },
     eq: { column: "user_id", value: 123 },
@@ -176,10 +196,144 @@ test("POST /attendance is not allowed", async () => {
   const { handler } = loadHandler();
 
   const response = await handler(
-    new Request("http://localhost/attendance", { method: "POST" }),
+    new Request("http://localhost/attendance", { method: "DELETE" }),
   );
   const body = await readJson(response);
 
   assert.equal(response.status, 405);
   assert.deepEqual(body, { message: "Method Not Allowed" });
+});
+
+test("POST /attendance requires table parameter", async () => {
+  const { handler, state } = loadHandler();
+
+  const response = await handler(
+    new Request("http://localhost/attendance", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ user_id: 10 }),
+    }),
+  );
+  const body = await readJson(response);
+
+  assert.equal(response.status, 400);
+  assert.deepEqual(body, { message: "table is required" });
+  assert.equal(state.events.length, 0);
+});
+
+test("POST /attendance inserts when no existing row is found", async () => {
+  const { handler, state } = loadHandler({
+    listResult: { data: [], error: null },
+    singleResult: {
+      data: { id: 9, user_id: 10, state: 1 },
+      error: null,
+    },
+  });
+
+  const response = await handler(
+    new Request("http://localhost/attendance?table=attendance", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        user_id: 10,
+        work_start_dt: "2026-03-25 09:00:00",
+        state: 1,
+      }),
+    }),
+  );
+  const body = await readJson(response);
+
+  assert.equal(response.status, 201);
+  assert.deepEqual(body, { id: 9, user_id: 10, state: 1 });
+  assert.deepEqual(toPlainJson(state.events[0]), {
+    table: "attendance",
+    inserted: null,
+    updated: null,
+    selected: "*",
+    ordered: null,
+    eq: { column: "user_id", value: 10 },
+    mode: "list",
+  });
+  assert.equal(state.events[1].mode, "single");
+  assert.equal(state.events[1].table, "attendance");
+  assert.equal(state.events[1].inserted.user_id, 10);
+  assert.equal(state.events[1].inserted.work_start_dt, "2026-03-25 09:00:00");
+  assert.equal(state.events[1].inserted.work_end_dt, null);
+  assert.equal(state.events[1].inserted.break_start_dt, null);
+  assert.equal(state.events[1].inserted.break_end_dt, null);
+  assert.equal(state.events[1].inserted.state, 1);
+});
+
+test("POST /attendance updates when a row already exists", async () => {
+  const { handler, state } = loadHandler({
+    listResult: {
+      data: [{ id: 9, user_id: 10, state: 1 }],
+      error: null,
+    },
+    singleResult: {
+      data: { id: 9, user_id: 10, state: 2 },
+      error: null,
+    },
+  });
+
+  const response = await handler(
+    new Request("http://localhost/attendance?table=attendance", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        user_id: 10,
+        break_start_dt: "2026-03-25 12:00:00",
+        state: 2,
+      }),
+    }),
+  );
+  const body = await readJson(response);
+
+  assert.equal(response.status, 200);
+  assert.deepEqual(body, { id: 9, user_id: 10, state: 2 });
+  assert.equal(state.events[1].mode, "single");
+  assert.equal(state.events[1].updated.user_id, 10);
+  assert.equal(state.events[1].updated.work_start_dt, null);
+  assert.equal(state.events[1].updated.work_end_dt, null);
+  assert.equal(state.events[1].updated.break_start_dt, "2026-03-25 12:00:00");
+  assert.equal(state.events[1].updated.break_end_dt, null);
+  assert.equal(state.events[1].updated.state, 2);
+  assert.deepEqual(toPlainJson(state.events[1].eq), {
+    column: "user_id",
+    value: 10,
+  });
+});
+
+test("POST /attendance rejects invalid user_id", async () => {
+  const { handler, state } = loadHandler();
+
+  const response = await handler(
+    new Request("http://localhost/attendance?table=attendance", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ user_id: "abc" }),
+    }),
+  );
+  const body = await readJson(response);
+
+  assert.equal(response.status, 400);
+  assert.deepEqual(body, { message: "Invalid user_id" });
+  assert.equal(state.events.length, 0);
+});
+
+test("POST /attendance rejects invalid state", async () => {
+  const { handler, state } = loadHandler();
+
+  const response = await handler(
+    new Request("http://localhost/attendance?table=attendance", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ user_id: 10, state: 9 }),
+    }),
+  );
+  const body = await readJson(response);
+
+  assert.equal(response.status, 400);
+  assert.deepEqual(body, { message: "Invalid state" });
+  assert.equal(state.events.length, 0);
 });
