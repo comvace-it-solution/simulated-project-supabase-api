@@ -1,0 +1,2 @@
+-- 初期データが必要になったらこのファイルに追記する。
+-- `supabase db reset` 実行時に migrations 適用後、この seed が流れる。
