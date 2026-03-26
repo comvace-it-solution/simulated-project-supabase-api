@@ -1,8 +1,10 @@
+/// <reference path="../_shared/deno-globals.d.ts" />
+
 import { handleLoginPost } from "./login/post.ts";
 import { optionsResponse, errorResponse } from "./_shared/response.ts";
 import { getRouteSegments } from "./_shared/validation.ts";
 
-Deno.serve(async (request) => {
+Deno.serve(async (request: Request): Promise<Response> => {
   if (request.method === "OPTIONS") {
     return optionsResponse();
   }

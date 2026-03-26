@@ -1,3 +1,5 @@
+/// <reference path="../_shared/deno-globals.d.ts" />
+
 import { errorResponse, optionsResponse } from "./_shared/response.ts";
 import { getRouteSegments } from "./_shared/validation.ts";
 import { handleAttendanceBreakEndPost } from "./breakEnd/post.ts";
@@ -6,7 +8,7 @@ import { handleAttendanceEndPost } from "./end/post.ts";
 import { handleAttendanceRecordsGet } from "./records/get.ts";
 import { handleAttendanceStartPost } from "./start/post.ts";
 
-Deno.serve(async (request) => {
+Deno.serve(async (request: Request): Promise<Response> => {
   if (request.method === "OPTIONS") {
     return optionsResponse();
   }

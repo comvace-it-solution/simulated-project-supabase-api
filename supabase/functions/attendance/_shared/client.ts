@@ -1,3 +1,6 @@
+/// <reference path="../../_shared/deno-globals.d.ts" />
+/// <reference path="../../_shared/supabase-js-shim.d.ts" />
+
 import { createClient, type SupabaseClient } from "jsr:@supabase/supabase-js@2";
 
 export function createServiceRoleClient(): SupabaseClient {

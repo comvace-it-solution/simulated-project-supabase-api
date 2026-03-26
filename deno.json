@@ -1,0 +1,14 @@
+{
+  "fmt": {
+    "semiColons": true,
+    "singleQuote": false,
+    "lineWidth": 80
+  },
+  "lint": {
+    "rules": {
+      "tags": [
+        "recommended"
+      ]
+    }
+  }
+}

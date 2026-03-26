@@ -1,3 +1,5 @@
+/// <reference path="../../_shared/deno-globals.d.ts" />
+
 import { HttpError } from "./validation.ts";
 
 export function assertApiKey(request: Request): void {

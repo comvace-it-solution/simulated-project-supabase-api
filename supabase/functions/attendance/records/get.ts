@@ -1,3 +1,5 @@
+/// <reference path="../../_shared/supabase-js-shim.d.ts" />
+
 import type { SupabaseClient } from "jsr:@supabase/supabase-js@2";
 import { assertApiKey } from "../_shared/auth.ts";
 import { createServiceRoleClient } from "../_shared/client.ts";
@@ -138,7 +140,9 @@ export async function handleAttendanceRecordsGet(
       fromDate,
       toDateExclusive,
     );
-    const attendanceIds = attendances.map((attendance) => attendance.id);
+    const attendanceIds = attendances.map((attendance: AttendanceRow) =>
+      attendance.id
+    );
     const attendanceBreaks = await findAttendanceBreaks(supabase, attendanceIds);
 
     const breaksByAttendanceId = new Map<number, AttendanceBreakRow[]>();
@@ -149,7 +153,9 @@ export async function handleAttendanceRecordsGet(
       breaksByAttendanceId.set(attendanceBreak.attendance_id, current);
     }
 
-    const attendanceRecords: AttendanceRecord[] = attendances.map((attendance) => {
+    const attendanceRecords: AttendanceRecord[] = attendances.map((
+      attendance: AttendanceRow,
+    ) => {
       const breaks = breaksByAttendanceId.get(attendance.id) ?? [];
 
       return {
@@ -157,7 +163,7 @@ export async function handleAttendanceRecordsGet(
         workDate: attendance.work_date,
         workStartDt: attendance.work_start_dt,
         workEndDt: attendance.work_end_dt,
-        breaks: breaks.map((attendanceBreak) => ({
+        breaks: breaks.map((attendanceBreak: AttendanceBreakRow) => ({
           id: attendanceBreak.id,
           breakStartDt: attendanceBreak.break_start_dt,
           breakEndDt: attendanceBreak.break_end_dt,

@@ -1,3 +1,5 @@
+/// <reference path="../../_shared/supabase-js-shim.d.ts" />
+
 import type { SupabaseClient } from "jsr:@supabase/supabase-js@2";
 import { assertApiKey } from "../_shared/auth.ts";
 import { createServiceRoleClient } from "../_shared/client.ts";
