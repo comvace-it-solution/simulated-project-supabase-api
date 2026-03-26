@@ -1,7 +1,0 @@
-{
-  "name": "simulated-project-supabase-api",
-  "private": true,
-  "scripts": {
-    "test": "node --test supabase/functions/users/index.test.js"
-  }
-}
