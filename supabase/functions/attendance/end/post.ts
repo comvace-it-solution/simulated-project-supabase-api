@@ -10,6 +10,7 @@ import {
 } from "../_shared/response.ts";
 import {
   HttpError,
+  assertAllowedBodyKeys,
   assertJsonContentType,
   assertMethod,
   parsePositiveInt,
@@ -96,6 +97,7 @@ export async function handleAttendanceEndPost(
     assertJsonContentType(request);
 
     const body = await readJsonBody<AttendanceEndRequestBody>(request);
+    assertAllowedBodyKeys(body, ["userId"]);
     const userId = parsePositiveInt(
       body.userId === undefined ? undefined : String(body.userId),
       "userId",

@@ -9,6 +9,7 @@ import {
 } from "../_shared/response.ts";
 import {
   HttpError,
+  assertAllowedBodyKeys,
   assertJsonContentType,
   assertMethod,
   readJsonBody,
@@ -82,6 +83,7 @@ export async function handleLoginPost(request: Request): Promise<Response> {
     assertJsonContentType(request);
 
     const body = await readJsonBody<LoginRequestBody>(request);
+    assertAllowedBodyKeys(body, ["email", "password"]);
     const email = normalizeEmail(body.email);
     const password = normalizePassword(body.password);
 

@@ -33,6 +33,24 @@ export async function readJsonBody<T>(request: Request): Promise<T> {
   }
 }
 
+export function assertAllowedBodyKeys(
+  body: unknown,
+  allowedKeys: readonly string[],
+): void {
+  if (!body || typeof body !== "object" || Array.isArray(body)) {
+    throw new HttpError(400, "リクエストボディが不正です。");
+  }
+
+  const invalidKeys = Object.keys(body).filter((key) => !allowedKeys.includes(key));
+
+  if (invalidKeys.length > 0) {
+    throw new HttpError(
+      400,
+      "リクエストボディに許可されていない項目が含まれています。",
+    );
+  }
+}
+
 export function getRouteSegments(url: string, functionName: string): string[] {
   const pathname = new URL(url).pathname.replace(/^\/+|\/+$/g, "");
   const segments = pathname.split("/").filter(Boolean);
