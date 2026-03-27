@@ -7,7 +7,6 @@ export type SuccessResponse<T> = {
 export type ErrorResponse = {
   result: "error";
   message: string;
-  errors: string[];
 };
 
 const BASE_CORS_HEADERS: Record<string, string> = {
@@ -48,12 +47,10 @@ export function successResponse<T>(
 export function errorResponse(
   message: string,
   status = 400,
-  errors: string[] = [],
 ): Response {
   const body: ErrorResponse = {
     result: "error",
     message,
-    errors,
   };
 
   return new Response(JSON.stringify(body), {

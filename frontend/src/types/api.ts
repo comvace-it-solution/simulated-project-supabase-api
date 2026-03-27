@@ -7,7 +7,6 @@ export type ApiSuccessResponse<T> = {
 export type ApiErrorResponse = {
   result: "error";
   message: string;
-  errors: string[];
 };
 
 export type LoginResponseData = {

@@ -174,7 +174,7 @@ export async function handleAttendanceEndPost(
     });
   } catch (error) {
     if (error instanceof HttpError) {
-      return errorResponse(error.message, error.status, error.errors);
+      return errorResponse(error.message, error.status);
     }
 
     const message = error instanceof Error

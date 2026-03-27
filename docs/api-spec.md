@@ -90,8 +90,7 @@ https://<project-ref>.supabase.co/functions/v1
 ```json
 {
   "result": "error",
-  "message": "エラー内容",
-  "errors": []
+  "message": "エラー内容"
 }
 ```
 
