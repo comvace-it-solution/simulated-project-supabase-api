@@ -38,6 +38,63 @@ a {
   min-height: 100vh;
 }
 
+.app-loading {
+  position: fixed;
+  inset: 0;
+  z-index: 3000;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background:
+    linear-gradient(135deg, rgba(18, 24, 32, 0.28), rgba(18, 24, 32, 0.18)),
+    rgba(255, 253, 249, 0.58);
+  backdrop-filter: blur(10px);
+
+  &__panel {
+    min-width: 220px;
+    display: grid;
+    justify-items: center;
+    gap: 16px;
+    padding: 28px 32px;
+    border: 1px solid rgba(231, 219, 208, 0.95);
+    border-radius: 24px;
+    background: rgba(255, 255, 255, 0.92);
+    box-shadow: $shadow-soft;
+  }
+
+  &__spinner {
+    width: 48px;
+    height: 48px;
+    border: 4px solid rgba(212, 75, 47, 0.18);
+    border-top-color: $color-accent;
+    border-radius: 50%;
+    animation: app-loading-spin 0.85s linear infinite;
+  }
+
+  &__label {
+    margin: 0;
+    font-family: $font-heading;
+    font-size: 18px;
+    letter-spacing: 0.04em;
+  }
+}
+
+.app-loading-enter-active,
+.app-loading-leave-active {
+  transition: opacity 0.18s ease;
+}
+
+.app-loading-enter-from,
+.app-loading-leave-to {
+  opacity: 0;
+}
+
+@keyframes app-loading-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
 .full-width {
   width: 100%;
 }

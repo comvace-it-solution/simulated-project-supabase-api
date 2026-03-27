@@ -1,5 +1,6 @@
 import axios, { type AxiosError } from "axios";
 import type { ApiErrorResponse } from "@/types/api";
+import { useLoadingStore } from "@/stores/loadingStore";
 
 const baseURL = import.meta.env.VITE_API_BASE_URL;
 const apiKey = import.meta.env.VITE_INTERNAL_API_KEY;
@@ -21,10 +22,25 @@ export const httpClient = axios.create({
 });
 
 httpClient.interceptors.request.use((config) => {
+  const loading = useLoadingStore();
+  loading.startLoading("http");
   config.headers.set("x-api-key", apiKey);
   config.headers.set("Content-Type", "application/json");
   return config;
 });
+
+httpClient.interceptors.response.use(
+  (response) => {
+    const loading = useLoadingStore();
+    loading.stopLoading("http");
+    return response;
+  },
+  (error) => {
+    const loading = useLoadingStore();
+    loading.stopLoading("http");
+    return Promise.reject(error);
+  },
+);
 
 export const getApiErrorMessage = (error: unknown): string => {
   const fallbackMessage = "通信に失敗しました。";
