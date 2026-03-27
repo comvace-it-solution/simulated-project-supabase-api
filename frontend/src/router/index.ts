@@ -44,7 +44,7 @@ const routes = [
         component: EmployeeRegistration,
       },
       {
-        path: "employeedetailedit",
+        path: "employeedetailedit/:userId",
         name: "EmployeeDetailEdit",
         component: EmployeeDetailEdit,
       },

@@ -6,7 +6,7 @@
         <h1 class="default-layout__title">勤怠管理</h1>
       </div>
 
-      <el-menu
+        <el-menu
         class="default-layout__menu"
         :default-active="activePath"
         router
@@ -14,7 +14,6 @@
         <el-menu-item index="/dashboard">ダッシュボード</el-menu-item>
         <el-menu-item index="/employeelist">従業員一覧</el-menu-item>
         <el-menu-item index="/employeeregistration">従業員登録</el-menu-item>
-        <el-menu-item index="/employeedetailedit">従業員編集</el-menu-item>
       </el-menu>
 
       <div class="default-layout__user-card">

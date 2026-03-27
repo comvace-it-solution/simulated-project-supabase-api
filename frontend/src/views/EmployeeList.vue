@@ -23,10 +23,13 @@
       <el-table-column prop="userName" label="氏名" min-width="180" />
       <el-table-column prop="email" label="メール" min-width="240" />
       <el-table-column prop="status" label="状態" min-width="120" />
-      <el-table-column label="遷移" min-width="140">
+      <el-table-column label="操作" min-width="220">
         <template #default="{ row }">
           <el-button text @click="handleMoveDetail(row.id)">
             勤怠詳細へ
+          </el-button>
+          <el-button text type="primary" @click="handleMoveEdit(row.id)">
+            編集へ
           </el-button>
         </template>
       </el-table-column>
@@ -69,6 +72,13 @@ const rows = computed<UserListRow[]>(() =>
 const handleMoveDetail = (userId: number): void => {
   router.push({
     name: "AttendanceDetail",
+    params: { userId: String(userId) },
+  });
+};
+
+const handleMoveEdit = (userId: number): void => {
+  router.push({
+    name: "EmployeeDetailEdit",
     params: { userId: String(userId) },
   });
 };
