@@ -6,6 +6,7 @@
 対象 API は以下の 7 本です。
 
 - `POST /auth/login`
+- `GET /users`
 - `GET /users/{userId}`
 - `POST /attendance/start`
 - `POST /attendance/break/start`
@@ -112,6 +113,7 @@ https://<project-ref>.supabase.co/functions/v1
 | API | 主に参照・更新するテーブル |
 | --- | --- |
 | `POST /auth/login` | `users`, `auth` |
+| `GET /users` | `users` |
 | `GET /users/{userId}` | `users` |
 | `POST /attendance/start` | `users`, `attendance` |
 | `POST /attendance/break/start` | `users`, `attendance`, `attendance_breaks` |
@@ -178,7 +180,45 @@ POST /auth/login
 | `401` | `email` または `password` 不一致 | `email または password が一致しません。` |
 | `409` | `auth` 未作成 | `auth が作成されていません。` |
 
-## 2. `GET /users/{userId}`
+## 2. `GET /users`
+
+### 概要
+
+従業員一覧を取得します。
+
+### エンドポイント
+
+```text
+GET /users
+```
+
+### 処理内容
+
+1. `x-api-key` を検証
+2. `users` を ID 昇順で取得
+3. 一覧を返却
+
+### 成功レスポンス例
+
+```json
+{
+  "result": "success",
+  "message": "ユーザー一覧を取得しました。",
+  "data": {
+    "users": [
+      {
+        "id": 1,
+        "userName": "山田太郎",
+        "email": "sample@example.com",
+        "currentAttendanceState": 1,
+        "currentAttendanceId": 10
+      }
+    ]
+  }
+}
+```
+
+## 3. `GET /users/{userId}`
 
 ### 概要
 
@@ -233,7 +273,7 @@ GET /users/{userId}
 | `400` | `userId` 不正 | `userId が不正です。` |
 | `404` | ユーザーなし | `ユーザーが存在しません。` |
 
-## 3. `POST /attendance/start`
+## 4. `POST /attendance/start`
 
 ### 概要
 
@@ -289,7 +329,7 @@ POST /attendance/start
 | `409` | すでに休憩中 | `すでに休憩中です。` |
 | `409` | 進行中勤務あり | `進行中勤務がすでに存在します。` |
 
-## 4. `POST /attendance/break/start`
+## 5. `POST /attendance/break/start`
 
 ### 概要
 
@@ -347,7 +387,7 @@ POST /attendance/break/start
 | `409` | 勤務レコード不整合 | `勤務レコードが不整合です。` |
 | `409` | 未終了休憩あり | `未終了の休憩が存在します。` |
 
-## 5. `POST /attendance/break/end`
+## 6. `POST /attendance/break/end`
 
 ### 概要
 
@@ -403,7 +443,7 @@ POST /attendance/break/end
 | `409` | 未終了休憩なし | `未終了の休憩が存在しません。` |
 | `409` | 未終了休憩複数 | `未終了の休憩が複数存在します。` |
 
-## 6. `POST /attendance/end`
+## 7. `POST /attendance/end`
 
 ### 概要
 
@@ -461,7 +501,7 @@ POST /attendance/end
 | `409` | 未終了休憩あり | `未終了の休憩が存在します。` |
 | `409` | 勤務レコード不整合 | `勤務レコードが不整合です。` |
 
-## 7. `GET /attendance/records`
+## 8. `GET /attendance/records`
 
 ### 概要
 
@@ -540,6 +580,7 @@ GET /attendance/records?userId=1&targetMonth=2026-03
 
 | パス | メソッド | 実処理 |
 | --- | --- | --- |
+| `/users` | `GET` | ユーザー一覧取得 |
 | `/users/{userId}` | `GET` | ユーザー取得 |
 
 ### `attendance` function

@@ -11,6 +11,10 @@ Deno.serve(async (request: Request): Promise<Response> => {
 
   const segments = getRouteSegments(request.url, "users");
 
+  if (segments.length === 0) {
+    return await handleUsersGet(request, undefined);
+  }
+
   if (segments.length === 1) {
     return await handleUsersGet(request, segments[0]);
   }

@@ -28,6 +28,14 @@ type UserResponseData = {
   currentAttendanceId: number | null;
 };
 
+type UserListItem = {
+  id: number;
+  userName: string;
+  email: string;
+  currentAttendanceState: number | null;
+  currentAttendanceId: number | null;
+};
+
 type UserRow = {
   id: number;
   userName: string;
@@ -42,6 +50,8 @@ type UserRow = {
   currentAttendanceState: number | null;
   currentAttendanceId: number | null;
 };
+
+type UserListRow = UserListItem;
 
 async function findUserById(
   supabase: SupabaseClient,
@@ -73,6 +83,27 @@ async function findUserById(
   return (data as UserRow | null) ?? null;
 }
 
+async function findUsers(
+  supabase: SupabaseClient,
+): Promise<UserListRow[]> {
+  const { data, error } = await supabase
+    .from("users")
+    .select(`
+      id,
+      userName:user_name,
+      email,
+      currentAttendanceState:current_attendance_state,
+      currentAttendanceId:current_attendance_id
+    `)
+    .order("id", { ascending: true });
+
+  if (error) {
+    throw new Error(`users 一覧の検索に失敗しました: ${error.message}`);
+  }
+
+  return (data ?? []) as UserListRow[];
+}
+
 export async function handleUsersGet(
   request: Request,
   userIdSegment: string | undefined,
@@ -81,8 +112,18 @@ export async function handleUsersGet(
     assertMethod(request, "GET");
     assertApiKey(request);
 
-    const userId = parsePositiveInt(userIdSegment, "userId");
     const supabase = createServiceRoleClient();
+
+    if (!userIdSegment) {
+      const users = await findUsers(supabase);
+      const responseData: { users: UserListItem[] } = {
+        users,
+      };
+
+      return successResponse("ユーザー一覧を取得しました。", responseData);
+    }
+
+    const userId = parsePositiveInt(userIdSegment, "userId");
     const user = await findUserById(supabase, userId);
 
     if (!user) {
