@@ -88,12 +88,12 @@
         </el-table-column>
         <el-table-column label="開始" min-width="180">
           <template #default="{ row }">
-            {{ row.workStartDt }}
+            {{ formatDateTime(row.workStartDt) }}
           </template>
         </el-table-column>
         <el-table-column label="終了" min-width="180">
           <template #default="{ row }">
-            {{ row.workEndDt ?? "進行中" }}
+            {{ row.workEndDt ? formatDateTime(row.workEndDt) : "進行中" }}
           </template>
         </el-table-column>
       </el-table>
@@ -109,6 +109,7 @@ import { fetchAttendanceRecordsApi } from "@/api/attendanceApi";
 import { getApiErrorMessage } from "@/api/httpClient";
 import { fetchUserProfileApi } from "@/api/usersApi";
 import type { AttendanceRecord, UserProfile } from "@/types/api";
+import { formatDateTime } from "@/utils/dateTime";
 
 type WeeklySummaryRow = {
   label: string;

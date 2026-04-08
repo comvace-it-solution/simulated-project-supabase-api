@@ -32,8 +32,16 @@
 
       <el-table :data="records" empty-text="勤務データがありません。">
         <el-table-column prop="workDate" label="勤務日" min-width="120" />
-        <el-table-column prop="workStartDt" label="開始" min-width="180" />
-        <el-table-column prop="workEndDt" label="終了" min-width="180" />
+        <el-table-column label="開始" min-width="180">
+          <template #default="{ row }">
+            {{ formatDateTime(row.workStartDt) }}
+          </template>
+        </el-table-column>
+        <el-table-column label="終了" min-width="180">
+          <template #default="{ row }">
+            {{ row.workEndDt ? formatDateTime(row.workEndDt) : "-" }}
+          </template>
+        </el-table-column>
         <el-table-column label="休憩回数" min-width="100">
           <template #default="{ row }">
             {{ row.breaks.length }}
@@ -58,6 +66,7 @@ import {
 import { getApiErrorMessage } from "@/api/httpClient";
 import { useAuthStore } from "@/stores/authStore";
 import type { AttendanceRecord } from "@/types/api";
+import { formatDateTime } from "@/utils/dateTime";
 
 const router = useRouter();
 const auth = useAuthStore();
