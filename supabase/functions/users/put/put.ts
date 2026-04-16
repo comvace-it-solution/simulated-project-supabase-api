@@ -115,12 +115,12 @@ async function ensureUserExists(userId: number): Promise<void> {
   }
 }
 
-export async function handleUsersPatch(
+export async function handleUsersPut(
   request: Request,
   userIdSegment: string,
 ): Promise<Response> {
   try {
-    assertMethod(request, "PATCH");
+    assertMethod(request, "PUT");
     assertApiKey(request);
     assertJsonContentType(request);
 

@@ -22,6 +22,8 @@ type CreateUserResponseData = {
   userId: number;
 };
 
+export type DeleteUserResponse = ApiSuccessResponse<CreateUserResponseData>;
+
 export type UpdateUserRequest = {
   userName: string;
   password?: string;
@@ -70,10 +72,20 @@ export const updateUserApi = async (
   userId: number,
   payload: UpdateUserRequest,
 ): Promise<CreateUserResponseData> => {
-  const response = await httpClient.patch<ApiSuccessResponse<CreateUserResponseData>>(
+  const response = await httpClient.put<ApiSuccessResponse<CreateUserResponseData>>(
     `/users/${userId}`,
     payload,
   );
 
   return response.data.data;
+};
+
+export const deleteUserApi = async (
+  userId: number,
+): Promise<DeleteUserResponse> => {
+  const response = await httpClient.delete<ApiSuccessResponse<CreateUserResponseData>>(
+    `/users/${userId}`,
+  );
+
+  return response.data;
 };
