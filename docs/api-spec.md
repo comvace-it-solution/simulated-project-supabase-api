@@ -209,6 +209,8 @@ GET /users
         "id": 1,
         "userName": "山田太郎",
         "email": "sample@example.com",
+        "birthDate": "1990-01-01",
+        "assignmentDate": "2026-03-28",
         "currentAttendanceState": 1,
         "currentAttendanceId": 10
       }

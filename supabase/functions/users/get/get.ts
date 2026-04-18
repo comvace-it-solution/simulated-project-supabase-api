@@ -32,6 +32,8 @@ type UserListItem = {
   id: number;
   userName: string;
   email: string;
+  birthDate: string | null;
+  assignmentDate: string;
   currentAttendanceState: number | null;
   currentAttendanceId: number | null;
 };
@@ -92,6 +94,8 @@ async function findUsers(
       id,
       userName:user_name,
       email,
+      birthDate:birth_date,
+      assignmentDate:assignment_date,
       currentAttendanceState:current_attendance_state,
       currentAttendanceId:current_attendance_id
     `)
