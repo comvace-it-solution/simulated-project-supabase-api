@@ -7,7 +7,7 @@ function createAllApiSpecSheets() {
       meta: [
         ["システム名", "人材管理システム"],
         ["API名", "ログインAPI"],
-        ["更新日", "2026/3/28"],
+        ["更新日", "2026/10/13"],
         ["メソッド", "POST"],
         ["URL", "/auth/login"],
         ["概要", "メールアドレスとパスワードを受け取り、ログイン可否を判定するAPI。\n認証成功時はユーザーIDとユーザー名を返却する。"],
@@ -47,7 +47,12 @@ function createAllApiSpecSheets() {
         ["8", "403", "APIキーが不正です。", "x-api-key不一致"],
         ["9", "405", "許可されていないHTTPメソッドです。", "POST以外でアクセス"],
         ["10", "409", "auth が作成されていません。", "authレコード未作成"],
-        ["11", "500", "ログイン処理に失敗しました", "内部例外"],
+        ["11", "500", "INTERNAL_API_KEY が設定されていません。", "環境変数未設定"],
+        ["12", "500", "SUPABASE_URL が設定されていません。", "環境変数未設定"],
+        ["13", "500", "SUPABASE_SERVICE_ROLE_KEY が設定されていません。", "環境変数未設定"],
+        ["14", "500", "users の検索に失敗しました: <DBエラー詳細>", "users検索時のDBエラー"],
+        ["15", "500", "auth の検索に失敗しました: <DBエラー詳細>", "auth検索時のDBエラー"],
+        ["16", "500", "ログイン処理に失敗しました。", "内部例外"],
       ],
       responseExample: {
         result: "success",
@@ -63,7 +68,7 @@ function createAllApiSpecSheets() {
       meta: [
         ["システム名", "人材管理システム"],
         ["API名", "従業員一覧取得API"],
-        ["更新日", "2026/3/28"],
+        ["更新日", "2026/10/13"],
         ["メソッド", "GET"],
         ["URL", "/users"],
         ["概要", "従業員一覧を取得するAPI。"],
@@ -100,7 +105,11 @@ function createAllApiSpecSheets() {
         ["1", "401", "x-api-key ヘッダーは必須です。", "x-api-key未指定"],
         ["2", "403", "APIキーが不正です。", "x-api-key不一致"],
         ["3", "405", "許可されていないHTTPメソッドです。", "GET以外でアクセス"],
-        ["4", "500", "ユーザー情報の取得に失敗しました", "内部例外"],
+        ["4", "500", "INTERNAL_API_KEY が設定されていません。", "環境変数未設定"],
+        ["5", "500", "SUPABASE_URL が設定されていません。", "環境変数未設定"],
+        ["6", "500", "SUPABASE_SERVICE_ROLE_KEY が設定されていません。", "環境変数未設定"],
+        ["7", "500", "users 一覧の検索に失敗しました: <DBエラー詳細>", "users一覧検索時のDBエラー"],
+        ["8", "500", "ユーザー情報の取得に失敗しました。", "内部例外"],
       ],
       responseExample: {
         result: "success",
@@ -125,7 +134,7 @@ function createAllApiSpecSheets() {
       meta: [
         ["システム名", "人材管理システム"],
         ["API名", "従業員詳細取得API"],
-        ["更新日", "2026/3/28"],
+        ["更新日", "2026/10/13"],
         ["メソッド", "GET"],
         ["URL", "/users/{userId}"],
         ["概要", "指定した従業員IDの詳細情報を取得するAPI。"],
@@ -168,7 +177,11 @@ function createAllApiSpecSheets() {
         ["3", "403", "APIキーが不正です。", "x-api-key不一致"],
         ["4", "404", "ユーザーが存在しません。", "対象ユーザーなし"],
         ["5", "405", "許可されていないHTTPメソッドです。", "GET以外でアクセス"],
-        ["6", "500", "ユーザー情報の取得に失敗しました", "内部例外"],
+        ["6", "500", "INTERNAL_API_KEY が設定されていません。", "環境変数未設定"],
+        ["7", "500", "SUPABASE_URL が設定されていません。", "環境変数未設定"],
+        ["8", "500", "SUPABASE_SERVICE_ROLE_KEY が設定されていません。", "環境変数未設定"],
+        ["9", "500", "users の検索に失敗しました: <DBエラー詳細>", "users検索時のDBエラー"],
+        ["10", "500", "ユーザー情報の取得に失敗しました。", "内部例外"],
       ],
       responseExample: {
         result: "success",
@@ -194,7 +207,7 @@ function createAllApiSpecSheets() {
       meta: [
         ["システム名", "人材管理システム"],
         ["API名", "従業員登録API"],
-        ["更新日", "2026/3/28"],
+        ["更新日", "2026/10/13"],
         ["メソッド", "POST"],
         ["URL", "/users"],
         ["概要", "従業員情報と認証情報を新規登録するAPI。"],
@@ -253,7 +266,12 @@ function createAllApiSpecSheets() {
         ["20", "403", "APIキーが不正です。", "x-api-key不一致"],
         ["21", "405", "許可されていないHTTPメソッドです。", "POST以外でアクセス"],
         ["22", "409", "email はすでに登録されています。", "メールアドレス重複"],
-        ["23", "500", "従業員登録に失敗しました", "内部例外"],
+        ["23", "500", "INTERNAL_API_KEY が設定されていません。", "環境変数未設定"],
+        ["24", "500", "SUPABASE_URL が設定されていません。", "環境変数未設定"],
+        ["25", "500", "SUPABASE_SERVICE_ROLE_KEY が設定されていません。", "環境変数未設定"],
+        ["26", "500", "users の作成に失敗しました: <DBエラー詳細>", "users登録時のDBエラー"],
+        ["27", "500", "auth の作成に失敗しました: <DBエラー詳細>", "auth登録失敗。作成済みusersは削除する"],
+        ["28", "500", "従業員登録に失敗しました。", "内部例外"],
       ],
       responseExample: {
         result: "success",
@@ -268,7 +286,7 @@ function createAllApiSpecSheets() {
       meta: [
         ["システム名", "人材管理システム"],
         ["API名", "従業員編集API"],
-        ["更新日", "2026/3/28"],
+        ["更新日", "2026/10/13"],
         ["メソッド", "PUT"],
         ["URL", "/users/{userId}"],
         ["概要", "指定した従業員IDの従業員情報を更新するAPI。userId自体は変更不可。"],
@@ -283,18 +301,38 @@ function createAllApiSpecSheets() {
         ["No.", "キー", "必須", "null", "型", "説明"],
         ["1", "userId", "◯", "-", "number", "更新対象の従業員ID"],
       ],
-      body: [
-        ["No.", "キー", "必須", "null", "型", "説明"],
-        ["1", "userName", "◯", "-", "string", "ユーザー名"],
-        ["2", "password", "-", "◯", "string", "変更時のみ半角英数字6文字"],
-        ["3", "email", "◯", "-", "string", "メールアドレス"],
-        ["4", "phoneNumber", "◯", "-", "string", "電話番号（11桁）"],
-        ["5", "postalCode", "◯", "-", "string", "郵便番号（7桁）"],
-        ["6", "prefecture", "◯", "-", "string", "都道府県"],
-        ["7", "streetAddress", "◯", "-", "string", "住所"],
-        ["8", "buildingName", "-", "◯", "string", "建物名"],
-        ["9", "birthDate", "◯", "-", "string(date)", "生年月日（YYYY-MM-DD）"],
-        ["10", "assignmentDate", "◯", "-", "string(date)", "配属日（YYYY-MM-DD）"],
+      bodySections: [
+        {
+          label: "Body: 【パスワードを更新する場合】bodyに以下パラメータをJSON形式でセットする",
+          rows: [
+            ["No.", "キー", "必須", "null", "型", "説明"],
+            ["1", "userName", "◯", "-", "string", "ユーザー名"],
+            ["2", "password", "◯", "-", "string", "半角英数字6文字"],
+            ["3", "email", "◯", "-", "string", "メールアドレス"],
+            ["4", "phoneNumber", "◯", "-", "string", "電話番号（11桁）"],
+            ["5", "postalCode", "◯", "-", "string", "郵便番号（7桁）"],
+            ["6", "prefecture", "◯", "-", "string", "都道府県"],
+            ["7", "streetAddress", "◯", "-", "string", "住所"],
+            ["8", "buildingName", "-", "◯", "string", "建物名"],
+            ["9", "birthDate", "◯", "-", "string(date)", "生年月日（YYYY-MM-DD）"],
+            ["10", "assignmentDate", "◯", "-", "string(date)", "配属日（YYYY-MM-DD）"],
+          ],
+        },
+        {
+          label: "Body: 【パスワードを更新しない場合】bodyに以下パラメータをJSON形式でセットする",
+          rows: [
+            ["No.", "キー", "必須", "null", "型", "説明"],
+            ["1", "userName", "◯", "-", "string", "ユーザー名"],
+            ["2", "email", "◯", "-", "string", "メールアドレス"],
+            ["3", "phoneNumber", "◯", "-", "string", "電話番号（11桁）"],
+            ["4", "postalCode", "◯", "-", "string", "郵便番号（7桁）"],
+            ["5", "prefecture", "◯", "-", "string", "都道府県"],
+            ["6", "streetAddress", "◯", "-", "string", "住所"],
+            ["7", "buildingName", "-", "◯", "string", "建物名"],
+            ["8", "birthDate", "◯", "-", "string(date)", "生年月日（YYYY-MM-DD）"],
+            ["9", "assignmentDate", "◯", "-", "string(date)", "配属日（YYYY-MM-DD）"],
+          ],
+        },
       ],
       response200: [
         ["No.", "キー", "必須", "null", "型", "説明"],
@@ -328,7 +366,13 @@ function createAllApiSpecSheets() {
         ["21", "404", "ユーザーが存在しません。", "対象ユーザーなし"],
         ["22", "405", "許可されていないHTTPメソッドです。", "PUT以外でアクセス"],
         ["23", "409", "email はすでに登録されています。", "メールアドレス重複"],
-        ["24", "500", "従業員情報の更新に失敗しました", "内部例外"],
+        ["24", "500", "INTERNAL_API_KEY が設定されていません。", "環境変数未設定"],
+        ["25", "500", "SUPABASE_URL が設定されていません。", "環境変数未設定"],
+        ["26", "500", "SUPABASE_SERVICE_ROLE_KEY が設定されていません。", "環境変数未設定"],
+        ["27", "500", "users の検索に失敗しました: <DBエラー詳細>", "users検索時のDBエラー"],
+        ["28", "500", "users の更新に失敗しました: <DBエラー詳細>", "users更新時のDBエラー"],
+        ["29", "500", "auth の更新に失敗しました: <DBエラー詳細>", "auth更新失敗。users更新は戻さない"],
+        ["30", "500", "従業員情報の更新に失敗しました。", "内部例外"],
       ],
       responseExample: {
         result: "success",
@@ -339,11 +383,71 @@ function createAllApiSpecSheets() {
       },
     },
     {
+      sheetName: "従業員削除API",
+      meta: [
+        ["システム名", "人材管理システム"],
+        ["API名", "従業員削除API"],
+        ["更新日", "2026/10/13"],
+        ["メソッド", "DELETE"],
+        ["URL", "/users/{userId}"],
+        ["概要", "指定した従業員IDの従業員情報を物理削除するAPI。\n認証情報と勤怠・休憩の記録も順次削除する。"],
+      ],
+      relatedTables: "users, auth, attendance, attendance_breaks",
+      headers: [
+        ["No.", "キー", "必須", "null", "型", "説明"],
+        ["1", "x-api-key", "◯", "-", "string", "内部APIキー（<INTERNAL_API_KEY>）"],
+      ],
+      parameters: [
+        ["No.", "キー", "必須", "null", "型", "説明"],
+        ["1", "userId", "◯", "-", "number", "物理削除対象の従業員ID"],
+      ],
+      bodySections: [{
+        label: "Body: 不要（bodyを送っても検証しない）",
+        rows: [
+          ["No.", "キー", "必須", "null", "型", "説明"],
+          ["1", "-", "-", "-", "-", "DELETEのためbodyなし"],
+        ],
+      }],
+      response200: [
+        ["No.", "キー", "必須", "null", "型", "説明"],
+        ["1", "result", "◯", "-", "string", "固定文字列：\"success\""],
+        ["2", "message", "◯", "-", "string", "従業員を削除しました。"],
+        ["3", "data", "◯", "-", "object", "レスポンス本体"],
+        ["4", "userId", "◯", "-", "number", "削除対象ユーザーID"],
+      ],
+      responseError: [
+        ["No.", "ステータス", "message", "発生条件"],
+        ["1", "400", "userId が不正です。", "userIdが正の整数でない"],
+        ["2", "401", "x-api-key ヘッダーは必須です。", "x-api-key未指定"],
+        ["3", "403", "APIキーが不正です。", "x-api-key不一致"],
+        ["4", "404", "ユーザーが存在しません。", "対象ユーザーなし"],
+        ["5", "405", "許可されていないHTTPメソッドです。", "DELETE以外でアクセス"],
+        ["6", "500", "INTERNAL_API_KEY が設定されていません。", "環境変数未設定"],
+        ["7", "500", "SUPABASE_URL が設定されていません。", "環境変数未設定"],
+        ["8", "500", "SUPABASE_SERVICE_ROLE_KEY が設定されていません。", "環境変数未設定"],
+        ["9", "500", "users の検索に失敗しました: <DBエラー詳細>", "users検索時のDBエラー"],
+        ["10", "500", "attendance の検索に失敗しました: <DBエラー詳細>", "attendance検索時のDBエラー"],
+        ["11", "500", "users.current_attendance の解除に失敗しました: <DBエラー詳細>", "現在勤怠情報の解除失敗"],
+        ["12", "500", "attendance_breaks の削除に失敗しました: <DBエラー詳細>", "休憩レコード削除失敗"],
+        ["13", "500", "attendance の削除に失敗しました: <DBエラー詳細>", "勤怠レコード削除失敗"],
+        ["14", "500", "auth の削除に失敗しました: <DBエラー詳細>", "認証情報削除失敗"],
+        ["15", "500", "users の削除に失敗しました: <DBエラー詳細>", "従業員情報削除失敗"],
+        ["16", "500", "従業員の削除に失敗しました。", "内部例外"],
+      ],
+      responseExample: {
+        result: "success",
+        message: "従業員を削除しました。",
+        data: {
+          userId: 2,
+        },
+      },
+    },
+    {
       sheetName: "勤務開始API",
       meta: [
         ["システム名", "人材管理システム"],
         ["API名", "勤務開始API"],
-        ["更新日", "2026/3/28"],
+        ["更新日", "2026/10/13"],
         ["メソッド", "POST"],
         ["URL", "/attendance/start"],
         ["概要", "指定した従業員の勤務開始を登録するAPI。"],
@@ -386,7 +490,14 @@ function createAllApiSpecSheets() {
         ["10", "409", "すでに勤務中です。", "勤務中状態"],
         ["11", "409", "すでに休憩中です。", "休憩中状態"],
         ["12", "409", "進行中勤務がすでに存在します。", "未終了勤務あり"],
-        ["13", "500", "勤務開始処理に失敗しました", "内部例外"],
+        ["13", "500", "INTERNAL_API_KEY が設定されていません。", "環境変数未設定"],
+        ["14", "500", "SUPABASE_URL が設定されていません。", "環境変数未設定"],
+        ["15", "500", "SUPABASE_SERVICE_ROLE_KEY が設定されていません。", "環境変数未設定"],
+        ["16", "500", "users の検索に失敗しました: <DBエラー詳細>", "users検索時のDBエラー"],
+        ["17", "500", "attendance の検索に失敗しました: <DBエラー詳細>", "attendance検索時のDBエラー"],
+        ["18", "500", "attendance の作成に失敗しました: <DBエラー詳細>", "attendance登録時のDBエラー"],
+        ["19", "500", "users の更新に失敗しました: <DBエラー詳細>", "users更新失敗。作成済みattendanceは削除する"],
+        ["20", "500", "勤務開始処理に失敗しました。", "内部例外"],
       ],
       responseExample: {
         result: "success",
@@ -404,7 +515,7 @@ function createAllApiSpecSheets() {
       meta: [
         ["システム名", "人材管理システム"],
         ["API名", "休憩開始API"],
-        ["更新日", "2026/3/28"],
+        ["更新日", "2026/10/13"],
         ["メソッド", "POST"],
         ["URL", "/attendance/break/start"],
         ["概要", "指定した従業員の休憩開始を登録するAPI。"],
@@ -448,7 +559,15 @@ function createAllApiSpecSheets() {
         ["12", "409", "current_attendance_id が設定されていません。", "勤務ID不整合"],
         ["13", "409", "勤務レコードが不整合です。", "勤務データ不整合"],
         ["14", "409", "未終了の休憩が存在します。", "進行中休憩あり"],
-        ["15", "500", "休憩開始処理に失敗しました", "内部例外"],
+        ["15", "500", "INTERNAL_API_KEY が設定されていません。", "環境変数未設定"],
+        ["16", "500", "SUPABASE_URL が設定されていません。", "環境変数未設定"],
+        ["17", "500", "SUPABASE_SERVICE_ROLE_KEY が設定されていません。", "環境変数未設定"],
+        ["18", "500", "users の検索に失敗しました: <DBエラー詳細>", "users検索時のDBエラー"],
+        ["19", "500", "attendance の検索に失敗しました: <DBエラー詳細>", "attendance検索時のDBエラー"],
+        ["20", "500", "attendance_breaks の検索に失敗しました: <DBエラー詳細>", "attendance_breaks検索時のDBエラー"],
+        ["21", "500", "attendance_breaks の作成に失敗しました: <DBエラー詳細>", "attendance_breaks登録時のDBエラー"],
+        ["22", "500", "users の更新に失敗しました: <DBエラー詳細>", "users更新失敗。作成済みattendance_breaksは削除する"],
+        ["23", "500", "休憩開始処理に失敗しました。", "内部例外"],
       ],
       responseExample: {
         result: "success",
@@ -465,7 +584,7 @@ function createAllApiSpecSheets() {
       meta: [
         ["システム名", "人材管理システム"],
         ["API名", "休憩終了API"],
-        ["更新日", "2026/3/28"],
+        ["更新日", "2026/10/13"],
         ["メソッド", "POST"],
         ["URL", "/attendance/break/end"],
         ["概要", "指定した従業員の休憩終了を登録するAPI。"],
@@ -508,7 +627,14 @@ function createAllApiSpecSheets() {
         ["11", "409", "current_attendance_id が設定されていません。", "勤務ID不整合"],
         ["12", "409", "未終了の休憩が存在しません。", "対象休憩なし"],
         ["13", "409", "未終了の休憩が複数存在します。", "休憩データ不整合"],
-        ["14", "500", "休憩終了処理に失敗しました", "内部例外"],
+        ["14", "500", "INTERNAL_API_KEY が設定されていません。", "環境変数未設定"],
+        ["15", "500", "SUPABASE_URL が設定されていません。", "環境変数未設定"],
+        ["16", "500", "SUPABASE_SERVICE_ROLE_KEY が設定されていません。", "環境変数未設定"],
+        ["17", "500", "users の検索に失敗しました: <DBエラー詳細>", "users検索時のDBエラー"],
+        ["18", "500", "attendance_breaks の検索に失敗しました: <DBエラー詳細>", "attendance_breaks検索時のDBエラー"],
+        ["19", "500", "attendance_breaks の更新に失敗しました: <DBエラー詳細>", "attendance_breaks更新時のDBエラー"],
+        ["20", "500", "users の更新に失敗しました: <DBエラー詳細>", "users更新失敗。break_end_dtをnullに戻す"],
+        ["21", "500", "休憩終了処理に失敗しました。", "内部例外"],
       ],
       responseExample: {
         result: "success",
@@ -525,7 +651,7 @@ function createAllApiSpecSheets() {
       meta: [
         ["システム名", "人材管理システム"],
         ["API名", "勤務終了API"],
-        ["更新日", "2026/3/28"],
+        ["更新日", "2026/10/13"],
         ["メソッド", "POST"],
         ["URL", "/attendance/end"],
         ["概要", "指定した従業員の勤務終了を登録するAPI。"],
@@ -568,7 +694,15 @@ function createAllApiSpecSheets() {
         ["12", "409", "current_attendance_id が設定されていません。", "勤務ID不整合"],
         ["13", "409", "勤務レコードが不整合です。", "勤務データ不整合"],
         ["14", "409", "未終了の休憩が存在します。", "進行中休憩あり"],
-        ["15", "500", "勤務終了処理に失敗しました", "内部例外"],
+        ["15", "500", "INTERNAL_API_KEY が設定されていません。", "環境変数未設定"],
+        ["16", "500", "SUPABASE_URL が設定されていません。", "環境変数未設定"],
+        ["17", "500", "SUPABASE_SERVICE_ROLE_KEY が設定されていません。", "環境変数未設定"],
+        ["18", "500", "users の検索に失敗しました: <DBエラー詳細>", "users検索時のDBエラー"],
+        ["19", "500", "attendance の検索に失敗しました: <DBエラー詳細>", "attendance検索時のDBエラー"],
+        ["20", "500", "attendance_breaks の検索に失敗しました: <DBエラー詳細>", "attendance_breaks検索時のDBエラー"],
+        ["21", "500", "attendance の更新に失敗しました: <DBエラー詳細>", "attendance更新時のDBエラー"],
+        ["22", "500", "users の更新に失敗しました: <DBエラー詳細>", "users更新失敗。work_end_dtをnullに戻す"],
+        ["23", "500", "勤務終了処理に失敗しました。", "内部例外"],
       ],
       responseExample: {
         result: "success",
@@ -584,7 +718,7 @@ function createAllApiSpecSheets() {
       meta: [
         ["システム名", "人材管理システム"],
         ["API名", "勤怠一覧取得API"],
-        ["更新日", "2026/3/28"],
+        ["更新日", "2026/10/13"],
         ["メソッド", "GET"],
         ["URL", "/attendance/records?userId={userId}&targetMonth={YYYY-MM}"],
         ["概要", "指定した従業員・対象月の勤怠一覧を取得するAPI。"],
@@ -627,7 +761,13 @@ function createAllApiSpecSheets() {
         ["6", "403", "APIキーが不正です。", "x-api-key不一致"],
         ["7", "404", "ユーザーが存在しません。", "対象ユーザーなし"],
         ["8", "405", "許可されていないHTTPメソッドです。", "GET以外でアクセス"],
-        ["9", "500", "勤怠一覧の取得に失敗しました", "内部例外"],
+        ["9", "500", "INTERNAL_API_KEY が設定されていません。", "環境変数未設定"],
+        ["10", "500", "SUPABASE_URL が設定されていません。", "環境変数未設定"],
+        ["11", "500", "SUPABASE_SERVICE_ROLE_KEY が設定されていません。", "環境変数未設定"],
+        ["12", "500", "users の検索に失敗しました: <DBエラー詳細>", "users検索時のDBエラー"],
+        ["13", "500", "attendance の検索に失敗しました: <DBエラー詳細>", "attendance検索時のDBエラー"],
+        ["14", "500", "attendance_breaks の検索に失敗しました: <DBエラー詳細>", "attendance_breaks検索時のDBエラー"],
+        ["15", "500", "勤怠一覧の取得に失敗しました。", "内部例外"],
       ],
       responseExample: {
         result: "success",
@@ -656,6 +796,8 @@ function createAllApiSpecSheets() {
   ];
 
   apiSpecs.forEach((spec) => {
+    normalizeSpecRowNumbers(spec);
+
     let sheet = ss.getSheetByName(spec.sheetName);
     if (!sheet) {
       sheet = ss.insertSheet(spec.sheetName);
@@ -667,6 +809,42 @@ function createAllApiSpecSheets() {
 
     renderApiSheet(sheet, spec);
   });
+
+  renderMessageDefinitionSheet(ss, apiSpecs);
+}
+
+// No. 列を 1 から振り直す。行を増減しても採番ずれが起きないようにする。
+function normalizeSpecRowNumbers(spec) {
+  const tables = [spec.headers, spec.parameters, spec.response200, spec.responseError];
+
+  getBodySections(spec).forEach((section) => {
+    tables.push(section.rows);
+  });
+
+  tables.forEach((rows) => {
+    if (!rows) return;
+
+    let no = 0;
+    rows.forEach((row, index) => {
+      if (index === 0) return;
+      if (row[1] === "-" || row[1] === "ー") return;
+
+      no++;
+      row[0] = String(no);
+    });
+  });
+}
+
+// Body は「パスワード更新あり/なし」のように複数ブロックを持つ場合がある。
+function getBodySections(spec) {
+  if (spec.bodySections) {
+    return spec.bodySections;
+  }
+
+  return [{
+    label: "Body: bodyに以下パラメータをJSON形式でセットする",
+    rows: spec.body,
+  }];
 }
 
 function renderApiSheet(sheet, spec) {
@@ -715,10 +893,12 @@ function renderApiSheet(sheet, spec) {
   row = drawStandardTable(sheet, row, spec.parameters, blue, black);
   row++;
 
-  drawSectionLabel(sheet, row, "Body: bodyに以下パラメータをJSON形式でセットする");
-  row++;
-  row = drawStandardTable(sheet, row, spec.body, blue, black);
-  row++;
+  getBodySections(spec).forEach((section) => {
+    drawSectionLabel(sheet, row, section.label);
+    row++;
+    row = drawStandardTable(sheet, row, section.rows, blue, black);
+    row++;
+  });
 
   drawSectionLabel(sheet, row, "Response 200");
   row++;
@@ -891,4 +1071,103 @@ function drawJsonExample(sheet, row, jsonObject, borderColor) {
 
   const lineCount = json.split("\n").length;
   sheet.setRowHeight(row, Math.max(20 * lineCount, 120));
+}
+
+// 各APIシートの Response Error と成功メッセージから「メッセージ定義」シートを生成する。
+// 定義表を手で二重管理しないことで、API追加時の記載漏れを防ぐ。
+function renderMessageDefinitionSheet(ss, apiSpecs) {
+  const sheetName = "メッセージ定義";
+  const blue = "#cfe2f3";
+  const black = "#000000";
+
+  let sheet = ss.getSheetByName(sheetName);
+  if (!sheet) {
+    sheet = ss.insertSheet(sheetName);
+  } else {
+    sheet.clear();
+    sheet.clearFormats();
+    sheet.clearConditionalFormatRules();
+  }
+
+  sheet.setHiddenGridlines(true);
+  sheet.setColumnWidth(1, 6);
+  sheet.setColumnWidth(2, 180);
+  sheet.setColumnWidth(3, 130);
+  sheet.setColumnWidth(4, 60);
+  sheet.setColumnWidth(5, 460);
+
+  sheet.getRange(1, 1, sheet.getMaxRows(), sheet.getMaxColumns())
+    .setFontFamily("Noto Sans JP")
+    .setFontSize(10)
+    .setVerticalAlignment("middle")
+    .setHorizontalAlignment("left")
+    .setWrap(true)
+    .setBackground("#ffffff")
+    .setBorder(false, false, false, false, false, false);
+
+  const rows = [["API名", "種別", "state", "message"]]
+    .concat(buildMessageDefinitionRows(apiSpecs));
+
+  rows.forEach((row, index) => {
+    const rowIndex = index + 2;
+    const rail = sheet.getRange(rowIndex, 1);
+    const range = sheet.getRange(rowIndex, 2, 1, 4);
+
+    range.breakApart();
+    range.setValues([row]);
+
+    rail
+      .setBackground("#ffffff")
+      .setBorder(false, false, false, true, false, false, black, SpreadsheetApp.BorderStyle.SOLID);
+
+    if (index === 0) {
+      range.setBackground(blue).setFontWeight("bold");
+    } else {
+      range.setBackground("#ffffff");
+    }
+
+    range.setBorder(true, true, true, true, true, true, black, SpreadsheetApp.BorderStyle.SOLID);
+    sheet.setRowHeight(rowIndex, 28);
+  });
+
+  sheet.getRange(1, 1, sheet.getMaxRows(), 1).clearContent();
+}
+
+function buildMessageDefinitionRows(apiSpecs) {
+  const rows = [];
+
+  apiSpecs.forEach((spec) => {
+    const apiName = spec.meta.reduce((acc, [label, value]) => {
+      return label === "API名" ? value : acc;
+    }, spec.sheetName);
+
+    const errorRows = [];
+    const validationRows = [];
+
+    spec.responseError.forEach((row, index) => {
+      if (index === 0) return;
+
+      const status = row[1];
+      const message = row[2];
+
+      if (status === "400") {
+        validationRows.push([apiName, "バリデーション系", status, message]);
+      } else {
+        errorRows.push([apiName, "エラー系", status, message]);
+      }
+    });
+
+    // エラー系はステータス昇順。同一ステータス内はシートの記載順を保つ。
+    errorRows.sort((a, b) => Number(a[2]) - Number(b[2]));
+
+    const successMessage = spec.responseExample && spec.responseExample.message;
+
+    errorRows.forEach((row) => rows.push(row));
+    if (successMessage) {
+      rows.push([apiName, "成功系", "200", successMessage]);
+    }
+    validationRows.forEach((row) => rows.push(row));
+  });
+
+  return rows;
 }

@@ -17,6 +17,32 @@
 - DB 定義は SQL の migration で管理する
 - テーブルは `public.users`, `public.auth`, `public.attendance`, `public.attendance_breaks` を使う
 
+## 仕様書サイト
+
+API と DB の仕様書は `docs/` 配下の Markdown で管理し、VitePress で静的サイトとして閲覧できます。
+
+```bash
+npm install
+npm run docs:dev
+```
+
+起動後に表示される URL を開くと、以下のページを横断して読めます。
+
+| ページ | 内容 |
+| --- | --- |
+| `docs/index.md` | エンドポイント一覧とテーブル一覧 |
+| `docs/api-spec.md` | API 11 本のリクエスト・レスポンス・処理内容 |
+| `docs/api-spec-errors.md` | ステータスコードごとの message と発生条件 |
+| `docs/db-spec.md` | 4 テーブルのカラム定義、制約、index、trigger |
+
+静的ファイルを生成する場合は `npm run docs:build`、生成結果を確認する場合は `npm run docs:preview` を使います。  
+出力先は `docs/.vitepress/dist` で、git 管理対象外です。
+
+`docs/*.gs` は同じ仕様を Google スプレッドシートとして出力するための Apps Script です。  
+スプレッドシートが必要な場合のみ使います。
+
+仕様の正は実装です。API の挙動は `supabase/functions/`、DB 定義は `supabase/migrations/*.sql` を基準にしてください。
+
 ## まず理解しておきたいこと
 
 ### migration 方式とは何か

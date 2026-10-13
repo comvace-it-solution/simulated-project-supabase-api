@@ -3,11 +3,14 @@
 ## 概要
 
 このドキュメントは、Supabase Edge Functions で提供する勤怠管理 API の仕様をまとめたものです。  
-対象 API は以下の 7 本です。
+対象 API は以下の 11 本です。
 
 - `POST /auth/login`
 - `GET /users`
 - `GET /users/{userId}`
+- `POST /users`
+- `PUT /users/{userId}`
+- `DELETE /users/{userId}`
 - `POST /attendance/start`
 - `POST /attendance/break/start`
 - `POST /attendance/break/end`
@@ -48,11 +51,13 @@ https://<project-ref>.supabase.co/functions/v1
 | --- | --- | --- |
 | `x-api-key` | 必須 | サーバー側の `INTERNAL_API_KEY` と照合する |
 
-### POST 時の必須ヘッダー
+### POST / PUT 時の必須ヘッダー
 
 | ヘッダー名 | 必須 | 説明 |
 | --- | --- | --- |
 | `Content-Type` | 必須 | `application/json` を指定する |
+
+`DELETE /users/{userId}` はボディを受け取らないため、`Content-Type` の検証は行いません。
 
 ## APIキー認証
 
@@ -71,7 +76,14 @@ https://<project-ref>.supabase.co/functions/v1
 - `OPTIONS` リクエスト
 - `Access-Control-Allow-Origin: *`
 - `Access-Control-Allow-Headers: authorization, x-client-info, apikey, content-type, x-api-key`
-- `Access-Control-Allow-Methods: GET, POST, OPTIONS`
+
+`Access-Control-Allow-Methods` は function ごとに異なります。
+
+| function | `Access-Control-Allow-Methods` |
+| --- | --- |
+| `auth` | `GET, POST, OPTIONS` |
+| `users` | `GET, POST, PUT, DELETE, OPTIONS` |
+| `attendance` | `GET, POST, OPTIONS` |
 
 ## 共通レスポンス形式
 
@@ -107,6 +119,22 @@ https://<project-ref>.supabase.co/functions/v1
 | `409` | 業務ルール違反、状態不整合 |
 | `500` | サーバー内部エラー |
 
+## 共通バリデーション仕様
+
+更新系 API の入力チェックは以下の方針で統一しています。
+
+| 項目 | ルール |
+| --- | --- |
+| 文字列全般 | 前後の空白を除去してから必須判定する |
+| 許可外 body 項目 | 定義外のキーが 1 つでもあれば `400` |
+| `userId` | 正の整数のみ（`^[1-9][0-9]*$`） |
+| `email` | `ローカル部@ドメイン.TLD` の簡易形式チェック |
+| `password` | 半角英数字6文字（`^[A-Za-z0-9]{6}$`） |
+| `phoneNumber` | 数字11桁 |
+| `postalCode` | 数字7桁 |
+| `birthDate` / `assignmentDate` | `YYYY-MM-DD` 形式かつ実在する日付 |
+| `targetMonth` | `YYYY-MM` 形式 |
+
 ## データモデルとの対応
 
 | API | 主に参照・更新するテーブル |
@@ -114,6 +142,9 @@ https://<project-ref>.supabase.co/functions/v1
 | `POST /auth/login` | `users`, `auth` |
 | `GET /users` | `users` |
 | `GET /users/{userId}` | `users` |
+| `POST /users` | `users`, `auth` |
+| `PUT /users/{userId}` | `users`, `auth` |
+| `DELETE /users/{userId}` | `users`, `auth`, `attendance`, `attendance_breaks` |
 | `POST /attendance/start` | `users`, `attendance` |
 | `POST /attendance/break/start` | `users`, `attendance`, `attendance_breaks` |
 | `POST /attendance/break/end` | `users`, `attendance_breaks` |
@@ -274,7 +305,253 @@ GET /users/{userId}
 | `400` | `userId` 不正 | `userId が不正です。` |
 | `404` | ユーザーなし | `ユーザーが存在しません。` |
 
-## 4. `POST /attendance/start`
+## 4. `POST /users`
+
+### 概要
+
+従業員情報と認証情報を新規登録します。  
+`users` と `auth` の 2 テーブルに登録します。
+
+### エンドポイント
+
+```text
+POST /users
+```
+
+### リクエストヘッダー
+
+- `x-api-key`
+- `Content-Type: application/json`
+
+### リクエストボディ
+
+```json
+{
+  "userName": "山田太郎",
+  "password": "abc123",
+  "email": "sample@example.com",
+  "phoneNumber": "09012345678",
+  "postalCode": "1500001",
+  "prefecture": "東京都",
+  "streetAddress": "渋谷区神宮前1-2-3",
+  "buildingName": "サンプルビル 5F",
+  "birthDate": "1990-04-01",
+  "assignmentDate": "2025-04-01"
+}
+```
+
+### リクエストボディ項目
+
+| 項目 | 型 | 必須 | 説明 |
+| --- | --- | --- | --- |
+| `userName` | string | 必須 | 氏名 |
+| `password` | string | 必須 | 半角英数字6文字 |
+| `email` | string | 必須 | メールアドレス |
+| `phoneNumber` | string | 必須 | 数字11桁 |
+| `postalCode` | string | 必須 | 数字7桁 |
+| `prefecture` | string | 必須 | 都道府県 |
+| `streetAddress` | string | 必須 | 住所 |
+| `buildingName` | string | 任意 | 建物名。空文字の場合は `null` で登録する |
+| `birthDate` | string | 必須 | `YYYY-MM-DD` |
+| `assignmentDate` | string | 必須 | `YYYY-MM-DD` |
+
+上記以外のキーが含まれている場合は `400` を返します。
+
+### 処理内容
+
+1. `x-api-key` と `Content-Type` を検証
+2. JSON ボディを読み取り、許可項目のみかを検証
+3. 各項目の必須・形式チェック
+4. `users` に登録して `id` を取得
+5. `auth` に `user_id` と `password` を登録
+6. `auth` 登録が失敗した場合は、作成済みの `users` を削除して `500` を返す
+7. 登録した `userId` を返却
+
+`current_attendance_state` と `current_attendance_id` は登録時に設定しないため、初期状態は非勤務中になります。
+
+### 成功レスポンス例
+
+```json
+{
+  "result": "success",
+  "message": "従業員登録に成功しました。",
+  "data": {
+    "userId": 2
+  }
+}
+```
+
+### エラー
+
+| ステータス | 条件 | メッセージ例 |
+| --- | --- | --- |
+| `400` | 必須項目が未入力 | `userName は必須です。` |
+| `400` | `password` 形式不正 | `password は半角英数字6文字で入力してください。` |
+| `400` | `email` 形式不正 | `email が不正です。` |
+| `400` | `phoneNumber` 形式不正 | `phoneNumber が不正です。` |
+| `400` | `postalCode` 形式不正 | `postalCode が不正です。` |
+| `400` | 日付形式不正 | `birthDate が不正です。` |
+| `400` | 許可外の body 項目を含む | `リクエストボディに許可されていない項目が含まれています。` |
+| `409` | `email` 重複 | `email はすでに登録されています。` |
+
+## 5. `PUT /users/{userId}`
+
+### 概要
+
+指定した従業員の情報を更新します。  
+`password` を指定した場合のみ `auth` も更新します。
+
+### エンドポイント
+
+```text
+PUT /users/{userId}
+```
+
+### リクエストヘッダー
+
+- `x-api-key`
+- `Content-Type: application/json`
+
+### パスパラメータ
+
+| パラメータ | 型 | 説明 |
+| --- | --- | --- |
+| `userId` | number | 更新対象ユーザーID |
+
+### リクエストボディ
+
+```json
+{
+  "userName": "山田太郎",
+  "email": "sample@example.com",
+  "phoneNumber": "09012345678",
+  "postalCode": "1500001",
+  "prefecture": "東京都",
+  "streetAddress": "渋谷区神宮前1-2-3",
+  "buildingName": "サンプルビル 5F",
+  "birthDate": "1990-04-01",
+  "assignmentDate": "2025-04-01"
+}
+```
+
+### リクエストボディ項目
+
+| 項目 | 型 | 必須 | 説明 |
+| --- | --- | --- | --- |
+| `userName` | string | 必須 | 氏名 |
+| `password` | string | 任意 | 変更する場合のみ指定する。半角英数字6文字 |
+| `email` | string | 必須 | メールアドレス |
+| `phoneNumber` | string | 必須 | 数字11桁 |
+| `postalCode` | string | 必須 | 数字7桁 |
+| `prefecture` | string | 必須 | 都道府県 |
+| `streetAddress` | string | 必須 | 住所 |
+| `buildingName` | string | 任意 | 建物名。空文字の場合は `null` で更新する |
+| `birthDate` | string | 必須 | `YYYY-MM-DD` |
+| `assignmentDate` | string | 必須 | `YYYY-MM-DD` |
+
+`password` を空文字または未指定にした場合、パスワードは変更しません。  
+`userId` は body では変更できません。
+
+### 処理内容
+
+1. `x-api-key` と `Content-Type` を検証
+2. `userId` を数値チェック
+3. JSON ボディを読み取り、許可項目のみかを検証
+4. 各項目の必須・形式チェック（`password` は入力がある場合のみ形式チェック）
+5. `users` の存在確認
+6. `users` を更新
+7. `password` の入力がある場合のみ `auth.password` を更新
+8. 更新対象の `userId` を返却
+
+`current_attendance_state` と `current_attendance_id` はこの API では更新しません。
+
+### 成功レスポンス例
+
+```json
+{
+  "result": "success",
+  "message": "従業員情報を更新しました。",
+  "data": {
+    "userId": 2
+  }
+}
+```
+
+### エラー
+
+| ステータス | 条件 | メッセージ例 |
+| --- | --- | --- |
+| `400` | `userId` 不正 | `userId が不正です。` |
+| `400` | 必須項目が未入力 | `userName は必須です。` |
+| `400` | `password` 形式不正 | `password は半角英数字6文字で入力してください。` |
+| `400` | 許可外の body 項目を含む | `リクエストボディに許可されていない項目が含まれています。` |
+| `404` | ユーザーなし | `ユーザーが存在しません。` |
+| `409` | `email` 重複 | `email はすでに登録されています。` |
+
+## 6. `DELETE /users/{userId}`
+
+### 概要
+
+指定した従業員を削除します。  
+勤怠と休憩の記録も含めた物理削除です。論理削除ではないため、復元はできません。
+
+### エンドポイント
+
+```text
+DELETE /users/{userId}
+```
+
+### リクエストヘッダー
+
+- `x-api-key`
+
+ボディは受け取らないため `Content-Type` は不要です。
+
+### パスパラメータ
+
+| パラメータ | 型 | 説明 |
+| --- | --- | --- |
+| `userId` | number | 削除対象ユーザーID |
+
+### 処理内容
+
+1. `x-api-key` を検証
+2. `userId` を数値チェック
+3. `users` の存在確認
+4. 対象ユーザーの `attendance.id` 一覧を取得
+5. `users.current_attendance_state` と `users.current_attendance_id` を `null` に更新
+6. 取得した `attendance.id` に紐づく `attendance_breaks` を削除
+7. `attendance` を削除
+8. `auth` を削除
+9. `users` を削除
+10. 削除した `userId` を返却
+
+削除順序は外部キー制約に合わせています。  
+特に手順 5 は、`users.current_attendance_id -> attendance.id` の参照を外してから `attendance` を削除するために必要です。
+
+### 成功レスポンス例
+
+```json
+{
+  "result": "success",
+  "message": "従業員を削除しました。",
+  "data": {
+    "userId": 2
+  }
+}
+```
+
+### エラー
+
+| ステータス | 条件 | メッセージ例 |
+| --- | --- | --- |
+| `400` | `userId` 不正 | `userId が不正です。` |
+| `404` | ユーザーなし | `ユーザーが存在しません。` |
+| `500` | 関連レコードの削除に失敗 | `attendance の削除に失敗しました: ...` |
+
+勤務中・休憩中のユーザーでも削除できます。進行中の勤怠もまとめて削除されます。
+
+## 7. `POST /attendance/start`
 
 ### 概要
 
@@ -330,7 +607,7 @@ POST /attendance/start
 | `409` | すでに休憩中 | `すでに休憩中です。` |
 | `409` | 進行中勤務あり | `進行中勤務がすでに存在します。` |
 
-## 5. `POST /attendance/break/start`
+## 8. `POST /attendance/break/start`
 
 ### 概要
 
@@ -388,7 +665,7 @@ POST /attendance/break/start
 | `409` | 勤務レコード不整合 | `勤務レコードが不整合です。` |
 | `409` | 未終了休憩あり | `未終了の休憩が存在します。` |
 
-## 6. `POST /attendance/break/end`
+## 9. `POST /attendance/break/end`
 
 ### 概要
 
@@ -444,7 +721,7 @@ POST /attendance/break/end
 | `409` | 未終了休憩なし | `未終了の休憩が存在しません。` |
 | `409` | 未終了休憩複数 | `未終了の休憩が複数存在します。` |
 
-## 7. `POST /attendance/end`
+## 10. `POST /attendance/end`
 
 ### 概要
 
@@ -502,7 +779,7 @@ POST /attendance/end
 | `409` | 未終了休憩あり | `未終了の休憩が存在します。` |
 | `409` | 勤務レコード不整合 | `勤務レコードが不整合です。` |
 
-## 8. `GET /attendance/records`
+## 11. `GET /attendance/records`
 
 ### 概要
 
@@ -582,7 +859,16 @@ GET /attendance/records?userId=1&targetMonth=2026-03
 | パス | メソッド | 実処理 |
 | --- | --- | --- |
 | `/users` | `GET` | ユーザー一覧取得 |
+| `/users` | `POST` | 従業員登録 |
 | `/users/{userId}` | `GET` | ユーザー取得 |
+| `/users/{userId}` | `PUT` | 従業員情報更新 |
+| `/users/{userId}` | `DELETE` | 従業員削除 |
+
+`users` function はパスセグメント数とメソッドでルーティングを決めます。
+
+- セグメントなし: `POST` は登録、それ以外は一覧取得
+- セグメント 1 つ: `DELETE` は削除、`PUT` は更新、それ以外は 1 件取得
+- セグメント 2 つ以上: `404`
 
 ### `attendance` function
 
@@ -609,10 +895,16 @@ GET /attendance/records?userId=1&targetMonth=2026-03
 
 現在の実装では、以下のような補償処理を入れています。
 
+- 従業員登録で `auth` 作成が失敗した場合は、作成した `users` を削除
 - 勤務開始後に `users` 更新が失敗した場合は、作成した `attendance` を削除
 - 休憩開始後に `users` 更新が失敗した場合は、作成した `attendance_breaks` を削除
 - 休憩終了後に `users` 更新が失敗した場合は、`break_end_dt` を `null` に戻す
 - 勤務終了後に `users` 更新が失敗した場合は、`work_end_dt` を `null` に戻す
+
+一方で、以下は補償処理を持っていないため、途中で失敗すると中途半端な状態が残ります。
+
+- 従業員更新で `users` 更新に成功し、`auth.password` 更新で失敗した場合、`users` の更新内容は戻らない
+- 従業員削除で関連レコード削除の途中で失敗した場合、削除済みのレコードは戻らない
 
 厳密な原子性が必要になった場合は、以下を検討してください。
 

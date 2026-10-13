@@ -10,8 +10,12 @@
 - `public.attendance`
 - `public.attendance_breaks`
 
-本リポジトリでは、DB 定義を migration 方式で管理しています。  
-実際の作成 SQL は `supabase/migrations/20260326030257_init_attendance_schema.sql` にあります。
+本リポジトリでは、DB 定義を migration 方式で管理しています。
+
+| migration | 内容 |
+| --- | --- |
+| `supabase/migrations/20260326030257_init_attendance_schema.sql` | テーブル、制約、index、trigger の作成 |
+| `supabase/migrations/20260326070117_seed_master_user.sql` | マスターユーザーと認証情報の投入（冪等） |
 
 ## 設計方針
 
@@ -279,6 +283,23 @@ users.current_attendance_id ---- attendance.id
 - `current_attendance_id` と実勤務レコードの整合性確認
 - 未終了休憩の存在確認
 - 月次取得 API のレスポンス整形
+- 従業員登録時の `users` と `auth` の同時作成
+- 従業員削除時の関連レコード削除順序
+
+### 従業員削除時の削除順序
+
+`users` を削除する場合、外部キー制約があるため以下の順序で実行します。
+
+1. `users.current_attendance_state` と `users.current_attendance_id` を `null` に更新
+2. 対象 `attendance` に紐づく `attendance_breaks` を削除
+3. `attendance` を削除
+4. `auth` を削除
+5. `users` を削除
+
+手順 1 は `users.current_attendance_id -> attendance.id` の参照を外すために必要です。  
+この参照が残っていると、手順 3 で FK 違反になります。
+
+なお、各テーブルの FK は `on delete cascade` を指定していないため、削除順序は API 側で制御する前提です。
 
 ## 補足
 

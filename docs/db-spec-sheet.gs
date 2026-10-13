@@ -1,6 +1,8 @@
 function createDbDefinitionSheet() {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
-  const sheetName = "DB定義";
+  // スプレッドシート側の既存シート名に合わせる。
+  // 別名にすると再実行時に重複シートができ、古い定義が残る。
+  const sheetName = "DB設計";
 
   let sheet = ss.getSheetByName(sheetName);
   if (!sheet) {
