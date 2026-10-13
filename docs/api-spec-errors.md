@@ -9,6 +9,9 @@
 - `POST /auth/login`
 - `GET /users`
 - `GET /users/{userId}`
+- `POST /users`
+- `PUT /users/{userId}`
+- `DELETE /users/{userId}`
 - `POST /attendance/start`
 - `POST /attendance/break/start`
 - `POST /attendance/break/end`
@@ -59,13 +62,15 @@
 | `405` | HTTPメソッド不正 | `許可されていないHTTPメソッドです。` | 各 API の許可メソッド以外 |
 | `404` | ルーティング対象外のパス | `対象のエンドポイントが存在しません。` | function 単位のルーティングで返却 |
 
-### POST API 共通
+### POST / PUT API 共通
 
 | ステータス | 条件 | message | 備考 |
 | --- | --- | --- | --- |
-| `400` | `Content-Type` が `application/json` ではない | `Content-Type は application/json を指定してください。` | `POST /auth/login` と勤怠系 POST API 共通 |
-| `400` | JSONボディのパースに失敗 | `リクエストボディが不正です。` | `POST /auth/login` と勤怠系 POST API 共通 |
-| `400` | 許可されていない body 項目を含む | `リクエストボディに許可されていない項目が含まれています。` | `POST /auth/login` と勤怠系 POST API 共通 |
+| `400` | `Content-Type` が `application/json` ではない | `Content-Type は application/json を指定してください。` | ボディを受け取る全 API 共通 |
+| `400` | JSONボディのパースに失敗 | `リクエストボディが不正です。` | ボディを受け取る全 API 共通 |
+| `400` | 許可されていない body 項目を含む | `リクエストボディに許可されていない項目が含まれています。` | ボディを受け取る全 API 共通 |
+
+`DELETE /users/{userId}` はボディを受け取らないため、上記 3 件は発生しません。
 
 ### 内部エラー共通
 
@@ -129,7 +134,113 @@
 | `500` | `SUPABASE_SERVICE_ROLE_KEY` 未設定 | `SUPABASE_SERVICE_ROLE_KEY が設定されていません。` | 共通エラー形式 |
 | `500` | `users` 検索失敗 | `users の検索に失敗しました: ...` | 共通エラー形式 |
 
-## 4. `POST /attendance/start`
+## 4. `POST /users`
+
+### エラー一覧
+
+| ステータス | 条件 | message | レスポンス内容 |
+| --- | --- | --- | --- |
+| `400` | `Content-Type` 不正 | `Content-Type は application/json を指定してください。` | 共通エラー形式 |
+| `400` | JSON不正 | `リクエストボディが不正です。` | 共通エラー形式 |
+| `400` | 未定義の body 項目を含む | `リクエストボディに許可されていない項目が含まれています。` | 共通エラー形式 |
+| `400` | `userName` 未入力 | `userName は必須です。` | 共通エラー形式 |
+| `400` | `password` 未入力 | `password は必須です。` | 共通エラー形式 |
+| `400` | `password` 形式不正 | `password は半角英数字6文字で入力してください。` | 共通エラー形式 |
+| `400` | `email` 未入力 | `email は必須です。` | 共通エラー形式 |
+| `400` | `email` 形式不正 | `email が不正です。` | 共通エラー形式 |
+| `400` | `phoneNumber` 未入力 | `phoneNumber は必須です。` | 共通エラー形式 |
+| `400` | `phoneNumber` が数字11桁でない | `phoneNumber が不正です。` | 共通エラー形式 |
+| `400` | `postalCode` 未入力 | `postalCode は必須です。` | 共通エラー形式 |
+| `400` | `postalCode` が数字7桁でない | `postalCode が不正です。` | 共通エラー形式 |
+| `400` | `prefecture` 未入力 | `prefecture は必須です。` | 共通エラー形式 |
+| `400` | `streetAddress` 未入力 | `streetAddress は必須です。` | 共通エラー形式 |
+| `400` | `birthDate` 未入力 | `birthDate は必須です。` | 共通エラー形式 |
+| `400` | `birthDate` 形式不正、または実在しない日付 | `birthDate が不正です。` | 共通エラー形式 |
+| `400` | `assignmentDate` 未入力 | `assignmentDate は必須です。` | 共通エラー形式 |
+| `400` | `assignmentDate` 形式不正、または実在しない日付 | `assignmentDate が不正です。` | 共通エラー形式 |
+| `401` | APIキー未指定 | `x-api-key ヘッダーは必須です。` | 共通エラー形式 |
+| `403` | APIキー不正 | `APIキーが不正です。` | 共通エラー形式 |
+| `405` | POST 以外のメソッド | `許可されていないHTTPメソッドです。` | 共通エラー形式 |
+| `409` | `email` 重複 | `email はすでに登録されています。` | 共通エラー形式 |
+| `500` | `INTERNAL_API_KEY` 未設定 | `INTERNAL_API_KEY が設定されていません。` | 共通エラー形式 |
+| `500` | `SUPABASE_URL` 未設定 | `SUPABASE_URL が設定されていません。` | 共通エラー形式 |
+| `500` | `SUPABASE_SERVICE_ROLE_KEY` 未設定 | `SUPABASE_SERVICE_ROLE_KEY が設定されていません。` | 共通エラー形式 |
+| `500` | `users` 作成失敗 | `users の作成に失敗しました: ...` | 共通エラー形式 |
+| `500` | `auth` 作成失敗 | `auth の作成に失敗しました: ...` | 作成済みの `users` を削除した上で返却 |
+
+### 補足
+
+`email` 重複は DB の `uq_users_email` 違反（SQLSTATE `23505`）を検知して `409` に変換しています。
+
+## 5. `PUT /users/{userId}`
+
+### エラー一覧
+
+| ステータス | 条件 | message | レスポンス内容 |
+| --- | --- | --- | --- |
+| `400` | `Content-Type` 不正 | `Content-Type は application/json を指定してください。` | 共通エラー形式 |
+| `400` | `userId` が正の整数でない | `userId が不正です。` | 共通エラー形式 |
+| `400` | JSON不正 | `リクエストボディが不正です。` | 共通エラー形式 |
+| `400` | 未定義の body 項目を含む | `リクエストボディに許可されていない項目が含まれています。` | 共通エラー形式 |
+| `400` | `userName` 未入力 | `userName は必須です。` | 共通エラー形式 |
+| `400` | `password` 形式不正 | `password は半角英数字6文字で入力してください。` | 入力がある場合のみ検証 |
+| `400` | `email` 未入力 | `email は必須です。` | 共通エラー形式 |
+| `400` | `email` 形式不正 | `email が不正です。` | 共通エラー形式 |
+| `400` | `phoneNumber` 未入力 | `phoneNumber は必須です。` | 共通エラー形式 |
+| `400` | `phoneNumber` が数字11桁でない | `phoneNumber が不正です。` | 共通エラー形式 |
+| `400` | `postalCode` 未入力 | `postalCode は必須です。` | 共通エラー形式 |
+| `400` | `postalCode` が数字7桁でない | `postalCode が不正です。` | 共通エラー形式 |
+| `400` | `prefecture` 未入力 | `prefecture は必須です。` | 共通エラー形式 |
+| `400` | `streetAddress` 未入力 | `streetAddress は必須です。` | 共通エラー形式 |
+| `400` | `birthDate` 未入力 | `birthDate は必須です。` | 共通エラー形式 |
+| `400` | `birthDate` 形式不正、または実在しない日付 | `birthDate が不正です。` | 共通エラー形式 |
+| `400` | `assignmentDate` 未入力 | `assignmentDate は必須です。` | 共通エラー形式 |
+| `400` | `assignmentDate` 形式不正、または実在しない日付 | `assignmentDate が不正です。` | 共通エラー形式 |
+| `401` | APIキー未指定 | `x-api-key ヘッダーは必須です。` | 共通エラー形式 |
+| `403` | APIキー不正 | `APIキーが不正です。` | 共通エラー形式 |
+| `404` | 対象ユーザーなし | `ユーザーが存在しません。` | body バリデーション通過後に判定 |
+| `405` | PUT 以外のメソッド | `許可されていないHTTPメソッドです。` | 共通エラー形式 |
+| `409` | `email` 重複 | `email はすでに登録されています。` | 共通エラー形式 |
+| `500` | `INTERNAL_API_KEY` 未設定 | `INTERNAL_API_KEY が設定されていません。` | 共通エラー形式 |
+| `500` | `SUPABASE_URL` 未設定 | `SUPABASE_URL が設定されていません。` | 共通エラー形式 |
+| `500` | `SUPABASE_SERVICE_ROLE_KEY` 未設定 | `SUPABASE_SERVICE_ROLE_KEY が設定されていません。` | 共通エラー形式 |
+| `500` | `users` 検索失敗 | `users の検索に失敗しました: ...` | 共通エラー形式 |
+| `500` | `users` 更新失敗 | `users の更新に失敗しました: ...` | 共通エラー形式 |
+| `500` | `auth` 更新失敗 | `auth の更新に失敗しました: ...` | `users` の更新は戻さない |
+
+### 補足
+
+`auth.password` の更新だけが失敗した場合、直前の `users` 更新は取り消されません。  
+`users` だけ更新された状態が残る点に注意してください。
+
+## 6. `DELETE /users/{userId}`
+
+### エラー一覧
+
+| ステータス | 条件 | message | レスポンス内容 |
+| --- | --- | --- | --- |
+| `400` | `userId` が正の整数でない | `userId が不正です。` | 共通エラー形式 |
+| `401` | APIキー未指定 | `x-api-key ヘッダーは必須です。` | 共通エラー形式 |
+| `403` | APIキー不正 | `APIキーが不正です。` | 共通エラー形式 |
+| `404` | 対象ユーザーなし | `ユーザーが存在しません。` | 共通エラー形式 |
+| `405` | DELETE 以外のメソッド | `許可されていないHTTPメソッドです。` | 共通エラー形式 |
+| `500` | `INTERNAL_API_KEY` 未設定 | `INTERNAL_API_KEY が設定されていません。` | 共通エラー形式 |
+| `500` | `SUPABASE_URL` 未設定 | `SUPABASE_URL が設定されていません。` | 共通エラー形式 |
+| `500` | `SUPABASE_SERVICE_ROLE_KEY` 未設定 | `SUPABASE_SERVICE_ROLE_KEY が設定されていません。` | 共通エラー形式 |
+| `500` | `users` 検索失敗 | `users の検索に失敗しました: ...` | 共通エラー形式 |
+| `500` | `attendance` 検索失敗 | `attendance の検索に失敗しました: ...` | 共通エラー形式 |
+| `500` | `current_attendance` 解除失敗 | `users.current_attendance の解除に失敗しました: ...` | 共通エラー形式 |
+| `500` | `attendance_breaks` 削除失敗 | `attendance_breaks の削除に失敗しました: ...` | 共通エラー形式 |
+| `500` | `attendance` 削除失敗 | `attendance の削除に失敗しました: ...` | 共通エラー形式 |
+| `500` | `auth` 削除失敗 | `auth の削除に失敗しました: ...` | 共通エラー形式 |
+| `500` | `users` 削除失敗 | `users の削除に失敗しました: ...` | 共通エラー形式 |
+
+### 補足
+
+削除は `users.current_attendance` の解除 → `attendance_breaks` → `attendance` → `auth` → `users` の順で実行します。  
+途中で失敗した場合、それ以前に削除・更新したレコードは戻りません。
+
+## 7. `POST /attendance/start`
 
 ### エラー一覧
 
@@ -155,7 +266,7 @@
 | `500` | `attendance` 作成失敗 | `attendance の作成に失敗しました: ...` | 共通エラー形式 |
 | `500` | `users` 更新失敗 | `users の更新に失敗しました: ...` | 共通エラー形式 |
 
-## 5. `POST /attendance/break/start`
+## 8. `POST /attendance/break/start`
 
 ### エラー一覧
 
@@ -184,7 +295,7 @@
 | `500` | `attendance_breaks` 作成失敗 | `attendance_breaks の作成に失敗しました: ...` | 共通エラー形式 |
 | `500` | `users` 更新失敗 | `users の更新に失敗しました: ...` | 共通エラー形式 |
 
-## 6. `POST /attendance/break/end`
+## 9. `POST /attendance/break/end`
 
 ### エラー一覧
 
@@ -211,7 +322,7 @@
 | `500` | `attendance_breaks` 更新失敗 | `attendance_breaks の更新に失敗しました: ...` | 共通エラー形式 |
 | `500` | `users` 更新失敗 | `users の更新に失敗しました: ...` | 共通エラー形式 |
 
-## 7. `POST /attendance/end`
+## 10. `POST /attendance/end`
 
 ### エラー一覧
 
@@ -240,7 +351,7 @@
 | `500` | `attendance` 更新失敗 | `attendance の更新に失敗しました: ...` | 共通エラー形式 |
 | `500` | `users` 更新失敗 | `users の更新に失敗しました: ...` | 共通エラー形式 |
 
-## 8. `GET /attendance/records`
+## 11. `GET /attendance/records`
 
 ### エラー一覧
 
@@ -265,3 +376,22 @@
 
 - `OPTIONS` リクエストはエラーではなく `200` で `"ok"` を返します。
 - `500` の一部は内部例外メッセージをそのまま返すため、テーブル名や設定キー名がレスポンスに含まれます。
+- 各 API はメソッド判定 → APIキー検証 → `Content-Type` 検証の順に実行します。そのため許可外メソッドでアクセスした場合は、APIキーが未指定でも `405` を返します。
+
+### 内部例外時の既定メッセージ
+
+`Error` インスタンス以外が throw された場合に限り、各 API は以下の固定メッセージを `500` で返します。  
+通常の DB エラーや設定不備では、上表のとおり例外メッセージがそのまま返るため、この固定メッセージは出ません。
+
+| API | message |
+| --- | --- |
+| `POST /auth/login` | `ログイン処理に失敗しました。` |
+| `GET /users` / `GET /users/{userId}` | `ユーザー情報の取得に失敗しました。` |
+| `POST /users` | `従業員登録に失敗しました。` |
+| `PUT /users/{userId}` | `従業員情報の更新に失敗しました。` |
+| `DELETE /users/{userId}` | `従業員の削除に失敗しました。` |
+| `POST /attendance/start` | `勤務開始処理に失敗しました。` |
+| `POST /attendance/break/start` | `休憩開始処理に失敗しました。` |
+| `POST /attendance/break/end` | `休憩終了処理に失敗しました。` |
+| `POST /attendance/end` | `勤務終了処理に失敗しました。` |
+| `GET /attendance/records` | `勤怠一覧の取得に失敗しました。` |
