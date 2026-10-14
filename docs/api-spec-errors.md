@@ -33,10 +33,41 @@
 
 ### レスポンス項目
 
-| 項目 | 型 | 説明 |
-| --- | --- | --- |
-| `result` | string | 固定で `error` |
-| `message` | string | エラー内容 |
+| 項目 | 型 | 必須 | 説明 |
+| --- | --- | --- | --- |
+| `result` | string | 必須 | 固定で `error` |
+| `message` | string | 必須 | エラー内容。下表の `message` 列の値がそのまま入る |
+
+成功時にある `data` は、エラー時には含まれません。
+
+### レスポンスヘッダー
+
+| ヘッダー | 値 |
+| --- | --- |
+| `Content-Type` | `application/json; charset=utf-8` |
+| `Access-Control-Allow-Origin` | `*` |
+| `Access-Control-Allow-Headers` | `authorization, x-client-info, apikey, content-type, x-api-key` |
+| `Access-Control-Allow-Methods` | `auth` と `attendance` は `GET, POST, OPTIONS`、`users` は `GET, POST, PUT, DELETE, OPTIONS` |
+
+### 本ドキュメントの読み方
+
+以降の表は「HTTP ステータス」と「そのとき `message` に入る文字列」の対応表です。  
+たとえば `POST /attendance/start` に勤務中のユーザーで再度リクエストすると、`409` と次のボディが返ります。
+
+```json
+{
+  "result": "error",
+  "message": "すでに勤務中です。"
+}
+```
+
+読むときは次の 3 点に注意してください。
+
+- `message` は 1 リクエストに 1 件だけです。複数のエラーをまとめた `errors` 配列は返しません
+- 検証は上から順に行い、最初に失敗した時点で応答します。複数項目が不正でも返るのは 1 件です
+- どの項目が原因かを示すフィールドはありません。項目名は `message` の文章に含まれます
+
+`OPTIONS` リクエストはエラー扱いにならず、`200` で本文 `ok` のプレーンテキストを返します。
 
 ### HTTPステータスコード方針
 
@@ -85,87 +116,87 @@
 
 ### エラー一覧
 
-| ステータス | 条件 | message | レスポンス内容 |
-| --- | --- | --- | --- |
-| `400` | `Content-Type` 不正 | `Content-Type は application/json を指定してください。` | 共通エラー形式 |
-| `400` | JSON不正 | `リクエストボディが不正です。` | 共通エラー形式 |
-| `400` | 未定義の body 項目を含む | `リクエストボディに許可されていない項目が含まれています。` | 共通エラー形式 |
-| `400` | `email` 未入力 | `email は必須です。` | 共通エラー形式 |
-| `400` | `password` 未入力 | `password は必須です。` | 共通エラー形式 |
-| `401` | APIキー未指定 | `x-api-key ヘッダーは必須です。` | 共通エラー形式 |
-| `401` | ユーザー未存在 | `email または password が一致しません。` | 共通エラー形式 |
-| `401` | パスワード不一致 | `email または password が一致しません。` | 共通エラー形式 |
-| `403` | APIキー不正 | `APIキーが不正です。` | 共通エラー形式 |
-| `405` | POST 以外のメソッド | `許可されていないHTTPメソッドです。` | 共通エラー形式 |
-| `409` | `auth` レコード未作成 | `auth が作成されていません。` | 共通エラー形式 |
-| `500` | `INTERNAL_API_KEY` 未設定 | `INTERNAL_API_KEY が設定されていません。` | 共通エラー形式 |
-| `500` | `SUPABASE_URL` 未設定 | `SUPABASE_URL が設定されていません。` | 共通エラー形式 |
-| `500` | `SUPABASE_SERVICE_ROLE_KEY` 未設定 | `SUPABASE_SERVICE_ROLE_KEY が設定されていません。` | 共通エラー形式 |
-| `500` | `users` 検索失敗 | `users の検索に失敗しました: ...` | 共通エラー形式 |
-| `500` | `auth` 検索失敗 | `auth の検索に失敗しました: ...` | 共通エラー形式 |
+| ステータス | 条件 | message |
+| --- | --- | --- |
+| `400` | `Content-Type` 不正 | `Content-Type は application/json を指定してください。` |
+| `400` | JSON不正 | `リクエストボディが不正です。` |
+| `400` | 未定義の body 項目を含む | `リクエストボディに許可されていない項目が含まれています。` |
+| `400` | `email` 未入力 | `email は必須です。` |
+| `400` | `password` 未入力 | `password は必須です。` |
+| `401` | APIキー未指定 | `x-api-key ヘッダーは必須です。` |
+| `401` | ユーザー未存在 | `email または password が一致しません。` |
+| `401` | パスワード不一致 | `email または password が一致しません。` |
+| `403` | APIキー不正 | `APIキーが不正です。` |
+| `405` | POST 以外のメソッド | `許可されていないHTTPメソッドです。` |
+| `409` | `auth` レコード未作成 | `auth が作成されていません。` |
+| `500` | `INTERNAL_API_KEY` 未設定 | `INTERNAL_API_KEY が設定されていません。` |
+| `500` | `SUPABASE_URL` 未設定 | `SUPABASE_URL が設定されていません。` |
+| `500` | `SUPABASE_SERVICE_ROLE_KEY` 未設定 | `SUPABASE_SERVICE_ROLE_KEY が設定されていません。` |
+| `500` | `users` 検索失敗 | `users の検索に失敗しました: ...` |
+| `500` | `auth` 検索失敗 | `auth の検索に失敗しました: ...` |
 
 ## 2. `GET /users`
 
 ### エラー一覧
 
-| ステータス | 条件 | message | レスポンス内容 |
-| --- | --- | --- | --- |
-| `401` | APIキー未指定 | `x-api-key ヘッダーは必須です。` | 共通エラー形式 |
-| `403` | APIキー不正 | `APIキーが不正です。` | 共通エラー形式 |
-| `405` | GET 以外のメソッド | `許可されていないHTTPメソッドです。` | 共通エラー形式 |
-| `500` | `INTERNAL_API_KEY` 未設定 | `INTERNAL_API_KEY が設定されていません。` | 共通エラー形式 |
-| `500` | `SUPABASE_URL` 未設定 | `SUPABASE_URL が設定されていません。` | 共通エラー形式 |
-| `500` | `SUPABASE_SERVICE_ROLE_KEY` 未設定 | `SUPABASE_SERVICE_ROLE_KEY が設定されていません。` | 共通エラー形式 |
-| `500` | `users` 一覧の検索失敗 | `users 一覧の検索に失敗しました: ...` | 共通エラー形式 |
+| ステータス | 条件 | message |
+| --- | --- | --- |
+| `401` | APIキー未指定 | `x-api-key ヘッダーは必須です。` |
+| `403` | APIキー不正 | `APIキーが不正です。` |
+| `405` | GET 以外のメソッド | `許可されていないHTTPメソッドです。` |
+| `500` | `INTERNAL_API_KEY` 未設定 | `INTERNAL_API_KEY が設定されていません。` |
+| `500` | `SUPABASE_URL` 未設定 | `SUPABASE_URL が設定されていません。` |
+| `500` | `SUPABASE_SERVICE_ROLE_KEY` 未設定 | `SUPABASE_SERVICE_ROLE_KEY が設定されていません。` |
+| `500` | `users` 一覧の検索失敗 | `users 一覧の検索に失敗しました: ...` |
 
 ## 3. `GET /users/{userId}`
 
 ### エラー一覧
 
-| ステータス | 条件 | message | レスポンス内容 |
-| --- | --- | --- | --- |
-| `400` | `userId` が正の整数でない | `userId が不正です。` | 共通エラー形式 |
-| `401` | APIキー未指定 | `x-api-key ヘッダーは必須です。` | 共通エラー形式 |
-| `403` | APIキー不正 | `APIキーが不正です。` | 共通エラー形式 |
-| `404` | 対象ユーザーなし | `ユーザーが存在しません。` | 共通エラー形式 |
-| `405` | GET 以外のメソッド | `許可されていないHTTPメソッドです。` | 共通エラー形式 |
-| `500` | `INTERNAL_API_KEY` 未設定 | `INTERNAL_API_KEY が設定されていません。` | 共通エラー形式 |
-| `500` | `SUPABASE_URL` 未設定 | `SUPABASE_URL が設定されていません。` | 共通エラー形式 |
-| `500` | `SUPABASE_SERVICE_ROLE_KEY` 未設定 | `SUPABASE_SERVICE_ROLE_KEY が設定されていません。` | 共通エラー形式 |
-| `500` | `users` 検索失敗 | `users の検索に失敗しました: ...` | 共通エラー形式 |
+| ステータス | 条件 | message |
+| --- | --- | --- |
+| `400` | `userId` が正の整数でない | `userId が不正です。` |
+| `401` | APIキー未指定 | `x-api-key ヘッダーは必須です。` |
+| `403` | APIキー不正 | `APIキーが不正です。` |
+| `404` | 対象ユーザーなし | `ユーザーが存在しません。` |
+| `405` | GET 以外のメソッド | `許可されていないHTTPメソッドです。` |
+| `500` | `INTERNAL_API_KEY` 未設定 | `INTERNAL_API_KEY が設定されていません。` |
+| `500` | `SUPABASE_URL` 未設定 | `SUPABASE_URL が設定されていません。` |
+| `500` | `SUPABASE_SERVICE_ROLE_KEY` 未設定 | `SUPABASE_SERVICE_ROLE_KEY が設定されていません。` |
+| `500` | `users` 検索失敗 | `users の検索に失敗しました: ...` |
 
 ## 4. `POST /users`
 
 ### エラー一覧
 
-| ステータス | 条件 | message | レスポンス内容 |
+| ステータス | 条件 | message | 備考 |
 | --- | --- | --- | --- |
-| `400` | `Content-Type` 不正 | `Content-Type は application/json を指定してください。` | 共通エラー形式 |
-| `400` | JSON不正 | `リクエストボディが不正です。` | 共通エラー形式 |
-| `400` | 未定義の body 項目を含む | `リクエストボディに許可されていない項目が含まれています。` | 共通エラー形式 |
-| `400` | `userName` 未入力 | `userName は必須です。` | 共通エラー形式 |
-| `400` | `password` 未入力 | `password は必須です。` | 共通エラー形式 |
-| `400` | `password` 形式不正 | `password は半角英数字6文字で入力してください。` | 共通エラー形式 |
-| `400` | `email` 未入力 | `email は必須です。` | 共通エラー形式 |
-| `400` | `email` 形式不正 | `email が不正です。` | 共通エラー形式 |
-| `400` | `phoneNumber` 未入力 | `phoneNumber は必須です。` | 共通エラー形式 |
-| `400` | `phoneNumber` が数字11桁でない | `phoneNumber が不正です。` | 共通エラー形式 |
-| `400` | `postalCode` 未入力 | `postalCode は必須です。` | 共通エラー形式 |
-| `400` | `postalCode` が数字7桁でない | `postalCode が不正です。` | 共通エラー形式 |
-| `400` | `prefecture` 未入力 | `prefecture は必須です。` | 共通エラー形式 |
-| `400` | `streetAddress` 未入力 | `streetAddress は必須です。` | 共通エラー形式 |
-| `400` | `birthDate` 未入力 | `birthDate は必須です。` | 共通エラー形式 |
-| `400` | `birthDate` 形式不正、または実在しない日付 | `birthDate が不正です。` | 共通エラー形式 |
-| `400` | `assignmentDate` 未入力 | `assignmentDate は必須です。` | 共通エラー形式 |
-| `400` | `assignmentDate` 形式不正、または実在しない日付 | `assignmentDate が不正です。` | 共通エラー形式 |
-| `401` | APIキー未指定 | `x-api-key ヘッダーは必須です。` | 共通エラー形式 |
-| `403` | APIキー不正 | `APIキーが不正です。` | 共通エラー形式 |
-| `405` | POST 以外のメソッド | `許可されていないHTTPメソッドです。` | 共通エラー形式 |
-| `409` | `email` 重複 | `email はすでに登録されています。` | 共通エラー形式 |
-| `500` | `INTERNAL_API_KEY` 未設定 | `INTERNAL_API_KEY が設定されていません。` | 共通エラー形式 |
-| `500` | `SUPABASE_URL` 未設定 | `SUPABASE_URL が設定されていません。` | 共通エラー形式 |
-| `500` | `SUPABASE_SERVICE_ROLE_KEY` 未設定 | `SUPABASE_SERVICE_ROLE_KEY が設定されていません。` | 共通エラー形式 |
-| `500` | `users` 作成失敗 | `users の作成に失敗しました: ...` | 共通エラー形式 |
+| `400` | `Content-Type` 不正 | `Content-Type は application/json を指定してください。` | - |
+| `400` | JSON不正 | `リクエストボディが不正です。` | - |
+| `400` | 未定義の body 項目を含む | `リクエストボディに許可されていない項目が含まれています。` | - |
+| `400` | `userName` 未入力 | `userName は必須です。` | - |
+| `400` | `password` 未入力 | `password は必須です。` | - |
+| `400` | `password` 形式不正 | `password は半角英数字6文字で入力してください。` | - |
+| `400` | `email` 未入力 | `email は必須です。` | - |
+| `400` | `email` 形式不正 | `email が不正です。` | - |
+| `400` | `phoneNumber` 未入力 | `phoneNumber は必須です。` | - |
+| `400` | `phoneNumber` が数字11桁でない | `phoneNumber が不正です。` | - |
+| `400` | `postalCode` 未入力 | `postalCode は必須です。` | - |
+| `400` | `postalCode` が数字7桁でない | `postalCode が不正です。` | - |
+| `400` | `prefecture` 未入力 | `prefecture は必須です。` | - |
+| `400` | `streetAddress` 未入力 | `streetAddress は必須です。` | - |
+| `400` | `birthDate` 未入力 | `birthDate は必須です。` | - |
+| `400` | `birthDate` 形式不正、または実在しない日付 | `birthDate が不正です。` | - |
+| `400` | `assignmentDate` 未入力 | `assignmentDate は必須です。` | - |
+| `400` | `assignmentDate` 形式不正、または実在しない日付 | `assignmentDate が不正です。` | - |
+| `401` | APIキー未指定 | `x-api-key ヘッダーは必須です。` | - |
+| `403` | APIキー不正 | `APIキーが不正です。` | - |
+| `405` | POST 以外のメソッド | `許可されていないHTTPメソッドです。` | - |
+| `409` | `email` 重複 | `email はすでに登録されています。` | - |
+| `500` | `INTERNAL_API_KEY` 未設定 | `INTERNAL_API_KEY が設定されていません。` | - |
+| `500` | `SUPABASE_URL` 未設定 | `SUPABASE_URL が設定されていません。` | - |
+| `500` | `SUPABASE_SERVICE_ROLE_KEY` 未設定 | `SUPABASE_SERVICE_ROLE_KEY が設定されていません。` | - |
+| `500` | `users` 作成失敗 | `users の作成に失敗しました: ...` | - |
 | `500` | `auth` 作成失敗 | `auth の作成に失敗しました: ...` | 作成済みの `users` を削除した上で返却 |
 
 ### 補足
@@ -176,36 +207,36 @@
 
 ### エラー一覧
 
-| ステータス | 条件 | message | レスポンス内容 |
+| ステータス | 条件 | message | 備考 |
 | --- | --- | --- | --- |
-| `400` | `Content-Type` 不正 | `Content-Type は application/json を指定してください。` | 共通エラー形式 |
-| `400` | `userId` が正の整数でない | `userId が不正です。` | 共通エラー形式 |
-| `400` | JSON不正 | `リクエストボディが不正です。` | 共通エラー形式 |
-| `400` | 未定義の body 項目を含む | `リクエストボディに許可されていない項目が含まれています。` | 共通エラー形式 |
-| `400` | `userName` 未入力 | `userName は必須です。` | 共通エラー形式 |
+| `400` | `Content-Type` 不正 | `Content-Type は application/json を指定してください。` | - |
+| `400` | `userId` が正の整数でない | `userId が不正です。` | - |
+| `400` | JSON不正 | `リクエストボディが不正です。` | - |
+| `400` | 未定義の body 項目を含む | `リクエストボディに許可されていない項目が含まれています。` | - |
+| `400` | `userName` 未入力 | `userName は必須です。` | - |
 | `400` | `password` 形式不正 | `password は半角英数字6文字で入力してください。` | 入力がある場合のみ検証 |
-| `400` | `email` 未入力 | `email は必須です。` | 共通エラー形式 |
-| `400` | `email` 形式不正 | `email が不正です。` | 共通エラー形式 |
-| `400` | `phoneNumber` 未入力 | `phoneNumber は必須です。` | 共通エラー形式 |
-| `400` | `phoneNumber` が数字11桁でない | `phoneNumber が不正です。` | 共通エラー形式 |
-| `400` | `postalCode` 未入力 | `postalCode は必須です。` | 共通エラー形式 |
-| `400` | `postalCode` が数字7桁でない | `postalCode が不正です。` | 共通エラー形式 |
-| `400` | `prefecture` 未入力 | `prefecture は必須です。` | 共通エラー形式 |
-| `400` | `streetAddress` 未入力 | `streetAddress は必須です。` | 共通エラー形式 |
-| `400` | `birthDate` 未入力 | `birthDate は必須です。` | 共通エラー形式 |
-| `400` | `birthDate` 形式不正、または実在しない日付 | `birthDate が不正です。` | 共通エラー形式 |
-| `400` | `assignmentDate` 未入力 | `assignmentDate は必須です。` | 共通エラー形式 |
-| `400` | `assignmentDate` 形式不正、または実在しない日付 | `assignmentDate が不正です。` | 共通エラー形式 |
-| `401` | APIキー未指定 | `x-api-key ヘッダーは必須です。` | 共通エラー形式 |
-| `403` | APIキー不正 | `APIキーが不正です。` | 共通エラー形式 |
+| `400` | `email` 未入力 | `email は必須です。` | - |
+| `400` | `email` 形式不正 | `email が不正です。` | - |
+| `400` | `phoneNumber` 未入力 | `phoneNumber は必須です。` | - |
+| `400` | `phoneNumber` が数字11桁でない | `phoneNumber が不正です。` | - |
+| `400` | `postalCode` 未入力 | `postalCode は必須です。` | - |
+| `400` | `postalCode` が数字7桁でない | `postalCode が不正です。` | - |
+| `400` | `prefecture` 未入力 | `prefecture は必須です。` | - |
+| `400` | `streetAddress` 未入力 | `streetAddress は必須です。` | - |
+| `400` | `birthDate` 未入力 | `birthDate は必須です。` | - |
+| `400` | `birthDate` 形式不正、または実在しない日付 | `birthDate が不正です。` | - |
+| `400` | `assignmentDate` 未入力 | `assignmentDate は必須です。` | - |
+| `400` | `assignmentDate` 形式不正、または実在しない日付 | `assignmentDate が不正です。` | - |
+| `401` | APIキー未指定 | `x-api-key ヘッダーは必須です。` | - |
+| `403` | APIキー不正 | `APIキーが不正です。` | - |
 | `404` | 対象ユーザーなし | `ユーザーが存在しません。` | body バリデーション通過後に判定 |
-| `405` | PUT 以外のメソッド | `許可されていないHTTPメソッドです。` | 共通エラー形式 |
-| `409` | `email` 重複 | `email はすでに登録されています。` | 共通エラー形式 |
-| `500` | `INTERNAL_API_KEY` 未設定 | `INTERNAL_API_KEY が設定されていません。` | 共通エラー形式 |
-| `500` | `SUPABASE_URL` 未設定 | `SUPABASE_URL が設定されていません。` | 共通エラー形式 |
-| `500` | `SUPABASE_SERVICE_ROLE_KEY` 未設定 | `SUPABASE_SERVICE_ROLE_KEY が設定されていません。` | 共通エラー形式 |
-| `500` | `users` 検索失敗 | `users の検索に失敗しました: ...` | 共通エラー形式 |
-| `500` | `users` 更新失敗 | `users の更新に失敗しました: ...` | 共通エラー形式 |
+| `405` | PUT 以外のメソッド | `許可されていないHTTPメソッドです。` | - |
+| `409` | `email` 重複 | `email はすでに登録されています。` | - |
+| `500` | `INTERNAL_API_KEY` 未設定 | `INTERNAL_API_KEY が設定されていません。` | - |
+| `500` | `SUPABASE_URL` 未設定 | `SUPABASE_URL が設定されていません。` | - |
+| `500` | `SUPABASE_SERVICE_ROLE_KEY` 未設定 | `SUPABASE_SERVICE_ROLE_KEY が設定されていません。` | - |
+| `500` | `users` 検索失敗 | `users の検索に失敗しました: ...` | - |
+| `500` | `users` 更新失敗 | `users の更新に失敗しました: ...` | - |
 | `500` | `auth` 更新失敗 | `auth の更新に失敗しました: ...` | `users` の更新は戻さない |
 
 ### 補足
@@ -217,23 +248,23 @@
 
 ### エラー一覧
 
-| ステータス | 条件 | message | レスポンス内容 |
-| --- | --- | --- | --- |
-| `400` | `userId` が正の整数でない | `userId が不正です。` | 共通エラー形式 |
-| `401` | APIキー未指定 | `x-api-key ヘッダーは必須です。` | 共通エラー形式 |
-| `403` | APIキー不正 | `APIキーが不正です。` | 共通エラー形式 |
-| `404` | 対象ユーザーなし | `ユーザーが存在しません。` | 共通エラー形式 |
-| `405` | DELETE 以外のメソッド | `許可されていないHTTPメソッドです。` | 共通エラー形式 |
-| `500` | `INTERNAL_API_KEY` 未設定 | `INTERNAL_API_KEY が設定されていません。` | 共通エラー形式 |
-| `500` | `SUPABASE_URL` 未設定 | `SUPABASE_URL が設定されていません。` | 共通エラー形式 |
-| `500` | `SUPABASE_SERVICE_ROLE_KEY` 未設定 | `SUPABASE_SERVICE_ROLE_KEY が設定されていません。` | 共通エラー形式 |
-| `500` | `users` 検索失敗 | `users の検索に失敗しました: ...` | 共通エラー形式 |
-| `500` | `attendance` 検索失敗 | `attendance の検索に失敗しました: ...` | 共通エラー形式 |
-| `500` | `current_attendance` 解除失敗 | `users.current_attendance の解除に失敗しました: ...` | 共通エラー形式 |
-| `500` | `attendance_breaks` 削除失敗 | `attendance_breaks の削除に失敗しました: ...` | 共通エラー形式 |
-| `500` | `attendance` 削除失敗 | `attendance の削除に失敗しました: ...` | 共通エラー形式 |
-| `500` | `auth` 削除失敗 | `auth の削除に失敗しました: ...` | 共通エラー形式 |
-| `500` | `users` 削除失敗 | `users の削除に失敗しました: ...` | 共通エラー形式 |
+| ステータス | 条件 | message |
+| --- | --- | --- |
+| `400` | `userId` が正の整数でない | `userId が不正です。` |
+| `401` | APIキー未指定 | `x-api-key ヘッダーは必須です。` |
+| `403` | APIキー不正 | `APIキーが不正です。` |
+| `404` | 対象ユーザーなし | `ユーザーが存在しません。` |
+| `405` | DELETE 以外のメソッド | `許可されていないHTTPメソッドです。` |
+| `500` | `INTERNAL_API_KEY` 未設定 | `INTERNAL_API_KEY が設定されていません。` |
+| `500` | `SUPABASE_URL` 未設定 | `SUPABASE_URL が設定されていません。` |
+| `500` | `SUPABASE_SERVICE_ROLE_KEY` 未設定 | `SUPABASE_SERVICE_ROLE_KEY が設定されていません。` |
+| `500` | `users` 検索失敗 | `users の検索に失敗しました: ...` |
+| `500` | `attendance` 検索失敗 | `attendance の検索に失敗しました: ...` |
+| `500` | `current_attendance` 解除失敗 | `users.current_attendance の解除に失敗しました: ...` |
+| `500` | `attendance_breaks` 削除失敗 | `attendance_breaks の削除に失敗しました: ...` |
+| `500` | `attendance` 削除失敗 | `attendance の削除に失敗しました: ...` |
+| `500` | `auth` 削除失敗 | `auth の削除に失敗しました: ...` |
+| `500` | `users` 削除失敗 | `users の削除に失敗しました: ...` |
 
 ### 補足
 
@@ -244,133 +275,133 @@
 
 ### エラー一覧
 
-| ステータス | 条件 | message | レスポンス内容 |
-| --- | --- | --- | --- |
-| `400` | `Content-Type` 不正 | `Content-Type は application/json を指定してください。` | 共通エラー形式 |
-| `400` | JSON不正 | `リクエストボディが不正です。` | 共通エラー形式 |
-| `400` | 未定義の body 項目を含む | `リクエストボディに許可されていない項目が含まれています。` | 共通エラー形式 |
-| `400` | `userId` 未指定 | `userId は必須です。` | 共通エラー形式 |
-| `400` | `userId` が正の整数でない | `userId が不正です。` | 共通エラー形式 |
-| `401` | APIキー未指定 | `x-api-key ヘッダーは必須です。` | 共通エラー形式 |
-| `403` | APIキー不正 | `APIキーが不正です。` | 共通エラー形式 |
-| `404` | 対象ユーザーなし | `ユーザーが存在しません。` | 共通エラー形式 |
-| `405` | POST 以外のメソッド | `許可されていないHTTPメソッドです。` | 共通エラー形式 |
-| `409` | すでに勤務中 | `すでに勤務中です。` | 共通エラー形式 |
-| `409` | すでに休憩中 | `すでに休憩中です。` | 共通エラー形式 |
-| `409` | 進行中勤務が存在 | `進行中勤務がすでに存在します。` | 共通エラー形式 |
-| `500` | `INTERNAL_API_KEY` 未設定 | `INTERNAL_API_KEY が設定されていません。` | 共通エラー形式 |
-| `500` | `SUPABASE_URL` 未設定 | `SUPABASE_URL が設定されていません。` | 共通エラー形式 |
-| `500` | `SUPABASE_SERVICE_ROLE_KEY` 未設定 | `SUPABASE_SERVICE_ROLE_KEY が設定されていません。` | 共通エラー形式 |
-| `500` | `users` 検索失敗 | `users の検索に失敗しました: ...` | 共通エラー形式 |
-| `500` | `attendance` 検索失敗 | `attendance の検索に失敗しました: ...` | 共通エラー形式 |
-| `500` | `attendance` 作成失敗 | `attendance の作成に失敗しました: ...` | 共通エラー形式 |
-| `500` | `users` 更新失敗 | `users の更新に失敗しました: ...` | 共通エラー形式 |
+| ステータス | 条件 | message |
+| --- | --- | --- |
+| `400` | `Content-Type` 不正 | `Content-Type は application/json を指定してください。` |
+| `400` | JSON不正 | `リクエストボディが不正です。` |
+| `400` | 未定義の body 項目を含む | `リクエストボディに許可されていない項目が含まれています。` |
+| `400` | `userId` 未指定 | `userId は必須です。` |
+| `400` | `userId` が正の整数でない | `userId が不正です。` |
+| `401` | APIキー未指定 | `x-api-key ヘッダーは必須です。` |
+| `403` | APIキー不正 | `APIキーが不正です。` |
+| `404` | 対象ユーザーなし | `ユーザーが存在しません。` |
+| `405` | POST 以外のメソッド | `許可されていないHTTPメソッドです。` |
+| `409` | すでに勤務中 | `すでに勤務中です。` |
+| `409` | すでに休憩中 | `すでに休憩中です。` |
+| `409` | 進行中勤務が存在 | `進行中勤務がすでに存在します。` |
+| `500` | `INTERNAL_API_KEY` 未設定 | `INTERNAL_API_KEY が設定されていません。` |
+| `500` | `SUPABASE_URL` 未設定 | `SUPABASE_URL が設定されていません。` |
+| `500` | `SUPABASE_SERVICE_ROLE_KEY` 未設定 | `SUPABASE_SERVICE_ROLE_KEY が設定されていません。` |
+| `500` | `users` 検索失敗 | `users の検索に失敗しました: ...` |
+| `500` | `attendance` 検索失敗 | `attendance の検索に失敗しました: ...` |
+| `500` | `attendance` 作成失敗 | `attendance の作成に失敗しました: ...` |
+| `500` | `users` 更新失敗 | `users の更新に失敗しました: ...` |
 
 ## 8. `POST /attendance/break/start`
 
 ### エラー一覧
 
-| ステータス | 条件 | message | レスポンス内容 |
-| --- | --- | --- | --- |
-| `400` | `Content-Type` 不正 | `Content-Type は application/json を指定してください。` | 共通エラー形式 |
-| `400` | JSON不正 | `リクエストボディが不正です。` | 共通エラー形式 |
-| `400` | 未定義の body 項目を含む | `リクエストボディに許可されていない項目が含まれています。` | 共通エラー形式 |
-| `400` | `userId` 未指定 | `userId は必須です。` | 共通エラー形式 |
-| `400` | `userId` が正の整数でない | `userId が不正です。` | 共通エラー形式 |
-| `401` | APIキー未指定 | `x-api-key ヘッダーは必須です。` | 共通エラー形式 |
-| `403` | APIキー不正 | `APIキーが不正です。` | 共通エラー形式 |
-| `404` | 対象ユーザーなし | `ユーザーが存在しません。` | 共通エラー形式 |
-| `405` | POST 以外のメソッド | `許可されていないHTTPメソッドです。` | 共通エラー形式 |
-| `409` | 非勤務中 | `非勤務中のため休憩開始できません。` | 共通エラー形式 |
-| `409` | すでに休憩中 | `すでに休憩中です。` | 共通エラー形式 |
-| `409` | `current_attendance_id` 未設定 | `current_attendance_id が設定されていません。` | 共通エラー形式 |
-| `409` | 勤務レコード不整合 | `勤務レコードが不整合です。` | 共通エラー形式 |
-| `409` | 未終了の休憩あり | `未終了の休憩が存在します。` | 共通エラー形式 |
-| `500` | `INTERNAL_API_KEY` 未設定 | `INTERNAL_API_KEY が設定されていません。` | 共通エラー形式 |
-| `500` | `SUPABASE_URL` 未設定 | `SUPABASE_URL が設定されていません。` | 共通エラー形式 |
-| `500` | `SUPABASE_SERVICE_ROLE_KEY` 未設定 | `SUPABASE_SERVICE_ROLE_KEY が設定されていません。` | 共通エラー形式 |
-| `500` | `users` 検索失敗 | `users の検索に失敗しました: ...` | 共通エラー形式 |
-| `500` | `attendance` 検索失敗 | `attendance の検索に失敗しました: ...` | 共通エラー形式 |
-| `500` | `attendance_breaks` 検索失敗 | `attendance_breaks の検索に失敗しました: ...` | 共通エラー形式 |
-| `500` | `attendance_breaks` 作成失敗 | `attendance_breaks の作成に失敗しました: ...` | 共通エラー形式 |
-| `500` | `users` 更新失敗 | `users の更新に失敗しました: ...` | 共通エラー形式 |
+| ステータス | 条件 | message |
+| --- | --- | --- |
+| `400` | `Content-Type` 不正 | `Content-Type は application/json を指定してください。` |
+| `400` | JSON不正 | `リクエストボディが不正です。` |
+| `400` | 未定義の body 項目を含む | `リクエストボディに許可されていない項目が含まれています。` |
+| `400` | `userId` 未指定 | `userId は必須です。` |
+| `400` | `userId` が正の整数でない | `userId が不正です。` |
+| `401` | APIキー未指定 | `x-api-key ヘッダーは必須です。` |
+| `403` | APIキー不正 | `APIキーが不正です。` |
+| `404` | 対象ユーザーなし | `ユーザーが存在しません。` |
+| `405` | POST 以外のメソッド | `許可されていないHTTPメソッドです。` |
+| `409` | 非勤務中 | `非勤務中のため休憩開始できません。` |
+| `409` | すでに休憩中 | `すでに休憩中です。` |
+| `409` | `current_attendance_id` 未設定 | `current_attendance_id が設定されていません。` |
+| `409` | 勤務レコード不整合 | `勤務レコードが不整合です。` |
+| `409` | 未終了の休憩あり | `未終了の休憩が存在します。` |
+| `500` | `INTERNAL_API_KEY` 未設定 | `INTERNAL_API_KEY が設定されていません。` |
+| `500` | `SUPABASE_URL` 未設定 | `SUPABASE_URL が設定されていません。` |
+| `500` | `SUPABASE_SERVICE_ROLE_KEY` 未設定 | `SUPABASE_SERVICE_ROLE_KEY が設定されていません。` |
+| `500` | `users` 検索失敗 | `users の検索に失敗しました: ...` |
+| `500` | `attendance` 検索失敗 | `attendance の検索に失敗しました: ...` |
+| `500` | `attendance_breaks` 検索失敗 | `attendance_breaks の検索に失敗しました: ...` |
+| `500` | `attendance_breaks` 作成失敗 | `attendance_breaks の作成に失敗しました: ...` |
+| `500` | `users` 更新失敗 | `users の更新に失敗しました: ...` |
 
 ## 9. `POST /attendance/break/end`
 
 ### エラー一覧
 
-| ステータス | 条件 | message | レスポンス内容 |
-| --- | --- | --- | --- |
-| `400` | `Content-Type` 不正 | `Content-Type は application/json を指定してください。` | 共通エラー形式 |
-| `400` | JSON不正 | `リクエストボディが不正です。` | 共通エラー形式 |
-| `400` | 未定義の body 項目を含む | `リクエストボディに許可されていない項目が含まれています。` | 共通エラー形式 |
-| `400` | `userId` 未指定 | `userId は必須です。` | 共通エラー形式 |
-| `400` | `userId` が正の整数でない | `userId が不正です。` | 共通エラー形式 |
-| `401` | APIキー未指定 | `x-api-key ヘッダーは必須です。` | 共通エラー形式 |
-| `403` | APIキー不正 | `APIキーが不正です。` | 共通エラー形式 |
-| `404` | 対象ユーザーなし | `ユーザーが存在しません。` | 共通エラー形式 |
-| `405` | POST 以外のメソッド | `許可されていないHTTPメソッドです。` | 共通エラー形式 |
-| `409` | 休憩中ではない | `休憩中ではありません。` | 共通エラー形式 |
-| `409` | `current_attendance_id` 未設定 | `current_attendance_id が設定されていません。` | 共通エラー形式 |
-| `409` | 未終了の休憩なし | `未終了の休憩が存在しません。` | 共通エラー形式 |
-| `409` | 未終了の休憩が複数存在 | `未終了の休憩が複数存在します。` | 共通エラー形式 |
-| `500` | `INTERNAL_API_KEY` 未設定 | `INTERNAL_API_KEY が設定されていません。` | 共通エラー形式 |
-| `500` | `SUPABASE_URL` 未設定 | `SUPABASE_URL が設定されていません。` | 共通エラー形式 |
-| `500` | `SUPABASE_SERVICE_ROLE_KEY` 未設定 | `SUPABASE_SERVICE_ROLE_KEY が設定されていません。` | 共通エラー形式 |
-| `500` | `users` 検索失敗 | `users の検索に失敗しました: ...` | 共通エラー形式 |
-| `500` | `attendance_breaks` 検索失敗 | `attendance_breaks の検索に失敗しました: ...` | 共通エラー形式 |
-| `500` | `attendance_breaks` 更新失敗 | `attendance_breaks の更新に失敗しました: ...` | 共通エラー形式 |
-| `500` | `users` 更新失敗 | `users の更新に失敗しました: ...` | 共通エラー形式 |
+| ステータス | 条件 | message |
+| --- | --- | --- |
+| `400` | `Content-Type` 不正 | `Content-Type は application/json を指定してください。` |
+| `400` | JSON不正 | `リクエストボディが不正です。` |
+| `400` | 未定義の body 項目を含む | `リクエストボディに許可されていない項目が含まれています。` |
+| `400` | `userId` 未指定 | `userId は必須です。` |
+| `400` | `userId` が正の整数でない | `userId が不正です。` |
+| `401` | APIキー未指定 | `x-api-key ヘッダーは必須です。` |
+| `403` | APIキー不正 | `APIキーが不正です。` |
+| `404` | 対象ユーザーなし | `ユーザーが存在しません。` |
+| `405` | POST 以外のメソッド | `許可されていないHTTPメソッドです。` |
+| `409` | 休憩中ではない | `休憩中ではありません。` |
+| `409` | `current_attendance_id` 未設定 | `current_attendance_id が設定されていません。` |
+| `409` | 未終了の休憩なし | `未終了の休憩が存在しません。` |
+| `409` | 未終了の休憩が複数存在 | `未終了の休憩が複数存在します。` |
+| `500` | `INTERNAL_API_KEY` 未設定 | `INTERNAL_API_KEY が設定されていません。` |
+| `500` | `SUPABASE_URL` 未設定 | `SUPABASE_URL が設定されていません。` |
+| `500` | `SUPABASE_SERVICE_ROLE_KEY` 未設定 | `SUPABASE_SERVICE_ROLE_KEY が設定されていません。` |
+| `500` | `users` 検索失敗 | `users の検索に失敗しました: ...` |
+| `500` | `attendance_breaks` 検索失敗 | `attendance_breaks の検索に失敗しました: ...` |
+| `500` | `attendance_breaks` 更新失敗 | `attendance_breaks の更新に失敗しました: ...` |
+| `500` | `users` 更新失敗 | `users の更新に失敗しました: ...` |
 
 ## 10. `POST /attendance/end`
 
 ### エラー一覧
 
-| ステータス | 条件 | message | レスポンス内容 |
-| --- | --- | --- | --- |
-| `400` | `Content-Type` 不正 | `Content-Type は application/json を指定してください。` | 共通エラー形式 |
-| `400` | JSON不正 | `リクエストボディが不正です。` | 共通エラー形式 |
-| `400` | 未定義の body 項目を含む | `リクエストボディに許可されていない項目が含まれています。` | 共通エラー形式 |
-| `400` | `userId` 未指定 | `userId は必須です。` | 共通エラー形式 |
-| `400` | `userId` が正の整数でない | `userId が不正です。` | 共通エラー形式 |
-| `401` | APIキー未指定 | `x-api-key ヘッダーは必須です。` | 共通エラー形式 |
-| `403` | APIキー不正 | `APIキーが不正です。` | 共通エラー形式 |
-| `404` | 対象ユーザーなし | `ユーザーが存在しません。` | 共通エラー形式 |
-| `405` | POST 以外のメソッド | `許可されていないHTTPメソッドです。` | 共通エラー形式 |
-| `409` | 勤務中ではない | `勤務中ではありません。` | 共通エラー形式 |
-| `409` | 休憩中のため勤務終了不可 | `休憩中のため勤務終了できません。` | 共通エラー形式 |
-| `409` | `current_attendance_id` 未設定 | `current_attendance_id が設定されていません。` | 共通エラー形式 |
-| `409` | 勤務レコード不整合 | `勤務レコードが不整合です。` | 共通エラー形式 |
-| `409` | 未終了の休憩あり | `未終了の休憩が存在します。` | 共通エラー形式 |
-| `500` | `INTERNAL_API_KEY` 未設定 | `INTERNAL_API_KEY が設定されていません。` | 共通エラー形式 |
-| `500` | `SUPABASE_URL` 未設定 | `SUPABASE_URL が設定されていません。` | 共通エラー形式 |
-| `500` | `SUPABASE_SERVICE_ROLE_KEY` 未設定 | `SUPABASE_SERVICE_ROLE_KEY が設定されていません。` | 共通エラー形式 |
-| `500` | `users` 検索失敗 | `users の検索に失敗しました: ...` | 共通エラー形式 |
-| `500` | `attendance` 検索失敗 | `attendance の検索に失敗しました: ...` | 共通エラー形式 |
-| `500` | `attendance_breaks` 検索失敗 | `attendance_breaks の検索に失敗しました: ...` | 共通エラー形式 |
-| `500` | `attendance` 更新失敗 | `attendance の更新に失敗しました: ...` | 共通エラー形式 |
-| `500` | `users` 更新失敗 | `users の更新に失敗しました: ...` | 共通エラー形式 |
+| ステータス | 条件 | message |
+| --- | --- | --- |
+| `400` | `Content-Type` 不正 | `Content-Type は application/json を指定してください。` |
+| `400` | JSON不正 | `リクエストボディが不正です。` |
+| `400` | 未定義の body 項目を含む | `リクエストボディに許可されていない項目が含まれています。` |
+| `400` | `userId` 未指定 | `userId は必須です。` |
+| `400` | `userId` が正の整数でない | `userId が不正です。` |
+| `401` | APIキー未指定 | `x-api-key ヘッダーは必須です。` |
+| `403` | APIキー不正 | `APIキーが不正です。` |
+| `404` | 対象ユーザーなし | `ユーザーが存在しません。` |
+| `405` | POST 以外のメソッド | `許可されていないHTTPメソッドです。` |
+| `409` | 勤務中ではない | `勤務中ではありません。` |
+| `409` | 休憩中のため勤務終了不可 | `休憩中のため勤務終了できません。` |
+| `409` | `current_attendance_id` 未設定 | `current_attendance_id が設定されていません。` |
+| `409` | 勤務レコード不整合 | `勤務レコードが不整合です。` |
+| `409` | 未終了の休憩あり | `未終了の休憩が存在します。` |
+| `500` | `INTERNAL_API_KEY` 未設定 | `INTERNAL_API_KEY が設定されていません。` |
+| `500` | `SUPABASE_URL` 未設定 | `SUPABASE_URL が設定されていません。` |
+| `500` | `SUPABASE_SERVICE_ROLE_KEY` 未設定 | `SUPABASE_SERVICE_ROLE_KEY が設定されていません。` |
+| `500` | `users` 検索失敗 | `users の検索に失敗しました: ...` |
+| `500` | `attendance` 検索失敗 | `attendance の検索に失敗しました: ...` |
+| `500` | `attendance_breaks` 検索失敗 | `attendance_breaks の検索に失敗しました: ...` |
+| `500` | `attendance` 更新失敗 | `attendance の更新に失敗しました: ...` |
+| `500` | `users` 更新失敗 | `users の更新に失敗しました: ...` |
 
 ## 11. `GET /attendance/records`
 
 ### エラー一覧
 
-| ステータス | 条件 | message | レスポンス内容 |
-| --- | --- | --- | --- |
-| `400` | `userId` クエリ未指定 | `userId は必須です。` | 共通エラー形式 |
-| `400` | `targetMonth` クエリ未指定 | `targetMonth は必須です。` | 共通エラー形式 |
-| `400` | `userId` が正の整数でない | `userId が不正です。` | 共通エラー形式 |
-| `400` | `targetMonth` 形式不正 | `targetMonth の形式が不正です。` | 共通エラー形式 |
-| `401` | APIキー未指定 | `x-api-key ヘッダーは必須です。` | 共通エラー形式 |
-| `403` | APIキー不正 | `APIキーが不正です。` | 共通エラー形式 |
-| `404` | 対象ユーザーなし | `ユーザーが存在しません。` | 共通エラー形式 |
-| `405` | GET 以外のメソッド | `許可されていないHTTPメソッドです。` | 共通エラー形式 |
-| `500` | `INTERNAL_API_KEY` 未設定 | `INTERNAL_API_KEY が設定されていません。` | 共通エラー形式 |
-| `500` | `SUPABASE_URL` 未設定 | `SUPABASE_URL が設定されていません。` | 共通エラー形式 |
-| `500` | `SUPABASE_SERVICE_ROLE_KEY` 未設定 | `SUPABASE_SERVICE_ROLE_KEY が設定されていません。` | 共通エラー形式 |
-| `500` | `users` 検索失敗 | `users の検索に失敗しました: ...` | 共通エラー形式 |
-| `500` | `attendance` 検索失敗 | `attendance の検索に失敗しました: ...` | 共通エラー形式 |
-| `500` | `attendance_breaks` 検索失敗 | `attendance_breaks の検索に失敗しました: ...` | 共通エラー形式 |
+| ステータス | 条件 | message |
+| --- | --- | --- |
+| `400` | `userId` クエリ未指定 | `userId は必須です。` |
+| `400` | `targetMonth` クエリ未指定 | `targetMonth は必須です。` |
+| `400` | `userId` が正の整数でない | `userId が不正です。` |
+| `400` | `targetMonth` 形式不正 | `targetMonth の形式が不正です。` |
+| `401` | APIキー未指定 | `x-api-key ヘッダーは必須です。` |
+| `403` | APIキー不正 | `APIキーが不正です。` |
+| `404` | 対象ユーザーなし | `ユーザーが存在しません。` |
+| `405` | GET 以外のメソッド | `許可されていないHTTPメソッドです。` |
+| `500` | `INTERNAL_API_KEY` 未設定 | `INTERNAL_API_KEY が設定されていません。` |
+| `500` | `SUPABASE_URL` 未設定 | `SUPABASE_URL が設定されていません。` |
+| `500` | `SUPABASE_SERVICE_ROLE_KEY` 未設定 | `SUPABASE_SERVICE_ROLE_KEY が設定されていません。` |
+| `500` | `users` 検索失敗 | `users の検索に失敗しました: ...` |
+| `500` | `attendance` 検索失敗 | `attendance の検索に失敗しました: ...` |
+| `500` | `attendance_breaks` 検索失敗 | `attendance_breaks の検索に失敗しました: ...` |
 
 ## 補足
 

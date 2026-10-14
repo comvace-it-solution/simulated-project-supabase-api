@@ -106,18 +106,124 @@ https://<project-ref>.supabase.co/functions/v1
 }
 ```
 
+## エラーレスポンスの構造
+
+### 共通ルール
+
+エラーは HTTP ステータスが異なるだけで、ボディの形は全 API・全ステータスで同一です。  
+`result` と `message` の 2 項目のみで、`data` は含まれません。
+
+| 項目 | 型 | 必須 | 内容 |
+| --- | --- | --- | --- |
+| `result` | string | 必須 | 固定で `"error"` |
+| `message` | string | 必須 | エラー内容。日本語の文章がそのまま入る |
+
+次の点に注意してください。
+
+- 1 リクエストにつき `message` は 1 件だけです。複数のエラーをまとめて返しません
+- 検証は上から順に実行し、最初に失敗した時点で応答を返します。そのため複数の項目が不正な場合、返るのは最初に検出された 1 件です
+- `errors` のような配列は返しません
+- どの項目が原因かを示すフィールド（`field` など）はありません。項目名は `message` の文章に含まれます
+
+### レスポンスヘッダー
+
+| ヘッダー | 値 |
+| --- | --- |
+| `Content-Type` | `application/json; charset=utf-8` |
+| `Access-Control-Allow-Origin` | `*` |
+| `Access-Control-Allow-Headers` | `authorization, x-client-info, apikey, content-type, x-api-key` |
+| `Access-Control-Allow-Methods` | function ごとに異なる（[CORS](#cors) 参照） |
+
+### HTTPステータスコード別の実際のレスポンス
+
+`message` の値はステータスと発生条件によって変わります。以下は代表的な例です。  
+API ごとの全パターンは [APIエラー仕様書](/api-spec-errors) を参照してください。
+
+`400` 入力不正、必須不足、形式不正
+
+```json
+{
+  "result": "error",
+  "message": "userId は必須です。"
+}
+```
+
+`401` APIキー未指定、または認証失敗
+
+```json
+{
+  "result": "error",
+  "message": "x-api-key ヘッダーは必須です。"
+}
+```
+
+`403` APIキー不一致
+
+```json
+{
+  "result": "error",
+  "message": "APIキーが不正です。"
+}
+```
+
+`404` 対象データなし、ルーティング対象外のパス
+
+```json
+{
+  "result": "error",
+  "message": "ユーザーが存在しません。"
+}
+```
+
+`405` 許可されていないHTTPメソッド
+
+```json
+{
+  "result": "error",
+  "message": "許可されていないHTTPメソッドです。"
+}
+```
+
+`409` 業務ルール違反、状態不整合
+
+```json
+{
+  "result": "error",
+  "message": "すでに勤務中です。"
+}
+```
+
+`500` サーバー内部エラー、設定不備、DB操作失敗
+
+```json
+{
+  "result": "error",
+  "message": "users の検索に失敗しました: duplicate key value violates unique constraint"
+}
+```
+
+`500` は例外メッセージをそのまま返すため、`message` に DB のエラー文やテーブル名、設定キー名が含まれます。  
+そのまま画面に表示すると内部情報が利用者に見えるため、クライアント側では固定文に置き換えることを推奨します。
+
+### JSON で返らないケース
+
+| ケース | 応答 |
+| --- | --- |
+| `OPTIONS` リクエスト | `200` で本文は `ok`。JSON ではなくプレーンテキスト |
+| Edge Functions 自体の起動失敗や未デプロイ | Supabase プラットフォーム側の応答になるため、この形式ではない |
+
 ## HTTPステータスコード方針
 
-| ステータス | 用途 |
-| --- | --- |
-| `200` | 正常終了 |
-| `400` | 入力不正、必須不足 |
-| `401` | APIキー未指定、または認証不一致 |
-| `403` | APIキー不一致 |
-| `404` | 対象データなし |
-| `405` | 許可されていないHTTPメソッド |
-| `409` | 業務ルール違反、状態不整合 |
-| `500` | サーバー内部エラー |
+| ステータス | 用途 | ボディ |
+| --- | --- | --- |
+| `200` | 正常終了 | `result` / `message` / `data` |
+| `400` | 入力不正、必須不足 | `result` / `message` |
+| `401` | APIキー未指定、または認証不一致 | `result` / `message` |
+| `403` | APIキー不一致 | `result` / `message` |
+| `404` | 対象データなし | `result` / `message` |
+| `405` | 許可されていないHTTPメソッド | `result` / `message` |
+| `409` | 業務ルール違反、状態不整合 | `result` / `message` |
+| `500` | サーバー内部エラー | `result` / `message` |
 
 ## 共通バリデーション仕様
 
